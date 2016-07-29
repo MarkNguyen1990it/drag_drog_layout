@@ -33,12 +33,13 @@ var MainDnD = React.createClass({
           checkFinished : false,
           focusWidgets  :  "",
           focusHighlights : JSON.parse(JSON.stringify(focusHighlightDefault)),
+          // check when sort able widget
           finishFocusHighlights:false,
           isOpen: false,
           componentType : "",
           widgetConfig : JSON.parse(JSON.stringify(widgetConfigDefault)),
           dragItem : JSON.parse(JSON.stringify(dragItemDefault)),
-
+          checkSameLine : false
         };
     },
 
@@ -69,12 +70,62 @@ var MainDnD = React.createClass({
       return check;
     },
 
+    // check number
+    checkDistanceCol : function(value1,value2){
+      var distance=Math.abs(value1-value2);
+      return distance;
+    },
+
+    calChangeHighlights : function(dragItem,indexRow,indexCol){
+      var focusHighlights = JSON.parse(JSON.stringify(focusHighlightDefault));
+      if (dragItem.indexRow === indexRow) {
+        focusHighlights.indexRow = indexRow;
+        focusHighlights.indexCol = indexCol;
+        if (indexRow > 0 && dragItem.data.col != 12) {
+            focusHighlights.list.push(indexRow - 1);
+            focusHighlights.list.push((indexRow - 1)+".bottom");
+        }
+        if (dragItem.data.col != 12) {
+            focusHighlights.list.push(indexRow);
+            focusHighlights.list.push((indexRow)+".bottom");
+        }
+        if (dragItem.indexCol !== indexCol) {
+            focusHighlights.list.push(indexRow + "." + indexCol + ".before");
+            if (dragItem.indexCol < indexCol || this.checkDistanceCol(indexCol, dragItem.indexCol) > 1) {
+                focusHighlights.list.push(indexRow + "." + indexCol + ".after");
+            }
+        }
+        if (indexCol > 0 && (dragItem.indexCol > indexCol || this.checkDistanceCol(dragItem.indexCol, indexCol) > 1)) {
+            focusHighlights.list.push(indexRow + "." + (indexCol - 1) + ".after");
+        }
+      }else{
+        focusHighlights.indexRow=indexRow;
+        focusHighlights.indexCol=indexCol;
+        if(dragItem.data.col != 12){
+          focusHighlights.list.push(indexRow);
+          focusHighlights.list.push(indexRow+".bottom");
+        }
+        if(indexRow>0 && dragItem.data.col != 12){
+          focusHighlights.list.push(indexRow-1);
+          focusHighlights.list.push((indexRow-1)+".bottom");
+        }
+        if(this.checkNumber(indexCol)){
+          focusHighlights.list.push(indexRow+"."+indexCol+".before");
+          focusHighlights.list.push(indexRow+"."+indexCol+".after");
+        }
+        if(indexCol>0){
+          focusHighlights.list.push(indexRow+"."+(indexCol-1)+".after");
+        }
+      }
+      return focusHighlights;
+    },
+
     // add Widget (ADD)
     onDragStartWidget: function(componentType,event){
       event.dataTransfer.effectAllowed = 'move';
       // setData() is necessary for starting the drag in firefox
       event.dataTransfer.setData('text', 'dummy');
-      this.setState({componentType:componentType,dragItem:JSON.parse(JSON.stringify(dragItemDefault))});
+      this.setState({componentType:componentType,dragItem:JSON.parse(JSON.stringify(dragItemDefault)),checkSameLine:false});
 
     },
 
@@ -93,17 +144,27 @@ var MainDnD = React.createClass({
 
     },
 
-    // over Widget (ADD)
-    onDragOverWidget : function(focusWidgets,event){
+    // over Widget (ADD-CHANGE)
+    onDragOverWidget : function(focusWidgets,indexRow,indexCol,event){
       event.preventDefault();
+      // Over when ADD
+      var dragItem=this.state.dragItem;
       if(this.state.componentType){
         if(this.state.focusWidgets || this.state.focusWidgets!==focusWidgets ){
           this.setState({focusWidgets:focusWidgets,focusHighlights:JSON.parse(JSON.stringify(focusHighlightDefault))});
         }
+      // Over when change
+      }else if(dragItem && this.checkNumber(dragItem.indexRow)){
+        var focusHighlights=this.calChangeHighlights(dragItem,indexRow,indexCol);
+        if(focusHighlights.list && focusHighlights.list.length > 0){
+          if(focusHighlights.list.indexOf(focusWidgets)>-1){
+            this.setState({focusWidgets:focusWidgets,focusHighlights:JSON.parse(JSON.stringify(focusHighlightDefault))});
+          }
+        }
       }
     },
 
-    // drag leave widget (ADD)
+    // leave widget (ADD-CHANGE)
     onDragLeaveWidget: function(focusWidgets,event){
       event.preventDefault();
       // if(this.state.componentType){
@@ -119,10 +180,11 @@ var MainDnD = React.createClass({
       this.setState({componentType:"",focusHighlights:JSON.parse(JSON.stringify(focusHighlightDefault))});
     },
 
-    // drop end widget (ADD)
-    onDropEndWidget : function(componentType,indexRow,indexCol,action,event){
+    // drop end widget (ADD-CHANGE)
+    onDropEndWidget : function(componentType,indexRow,indexCol,action,focusWidgets,event){
       event.preventDefault();
       var widgetConfig=this.state.widgetConfig;
+      var dragItem=this.state.dragItem;
       if(this.state.componentType){
         var widgets=
           {
@@ -155,9 +217,87 @@ var MainDnD = React.createClass({
           widgetConfig.widgets[indexRow]=rowWidgets;
           this.setState({widgetConfig:widgetConfig,focusWidgets:""});
         }
+      }else if(dragItem && this.checkNumber(dragItem.indexRow)){
+        var focusHighlights=this.calChangeHighlights(dragItem,indexRow,indexCol);
+        if(focusHighlights.list && focusHighlights.list.length > 0){
+          if(focusHighlights.list.indexOf(focusWidgets)>-1){
+            var rowDragItem= JSON.parse(JSON.stringify(widgetConfig.widgets[dragItem.indexRow]));
+
+            if(dragItem.indexRow==indexRow){
+              var widgets=rowDragItem[dragItem.indexCol];
+              if(!this.checkNumber(indexCol)){
+                  var index=indexRow+1;
+                  widgetConfig.widgets.splice(index, 0, [widgets]);
+                  rowDragItem.splice(dragItem.indexCol, 1);
+                  if(!rowDragItem || rowDragItem.length==0){
+                    widgetConfig.widgets.splice(dragItem.indexRow,0);
+                  }else{
+                    widgetConfig.widgets[dragItem.indexRow]=rowDragItem;
+                  }
+                // add col & row
+              }else{
+                if(action==="before"){
+                  rowDragItem.splice(indexCol, 0, widgets);
+                }else if(action==="after"){
+                  rowDragItem.splice((indexCol+1), 0, widgets);
+                }
+                if(dragItem.indexCol > indexCol){
+                  rowDragItem.splice(dragItem.indexCol+1, 1);
+                }else{
+                  rowDragItem.splice(dragItem.indexCol, 1);
+                }
+                widgetConfig.widgets[dragItem.indexRow]=rowDragItem;
+              }
+              widgetConfig.widgets.map(function(rowWidgets, indexRow){
+                 var numCol=12/(rowWidgets.length);
+                 rowWidgets.map(function(widget, indexCol){
+                   rowWidgets[indexCol]["col"]=numCol;
+                 });
+              });
+            }else if(dragItem.indexRow!=indexRow){
+              var rowDragItem= JSON.parse(JSON.stringify(widgetConfig.widgets[dragItem.indexRow]));
+              var rowDrogItem= JSON.parse(JSON.stringify(widgetConfig.widgets[indexRow]));
+              var widgets=rowDragItem[dragItem.indexCol];
+              if(!this.checkNumber(indexCol)){
+                  var index=indexRow+1;
+                  rowDragItem.splice(dragItem.indexCol, 1);
+                  if(!rowDragItem || rowDragItem.length==0){
+                    widgetConfig.widgets.splice(dragItem.indexRow,0);
+                  }else{
+                    widgetConfig.widgets[dragItem.indexRow]=rowDragItem;
+                  }
+                  widgetConfig.widgets.splice(index, 0, [widgets]);
+                  widgetConfig.widgets[dragItem.indexRow]=rowDragItem;
+                // add col & row
+              }else{
+                if(action==="before"){
+                  rowDrogItem.splice(indexCol, 0, widgets);
+                  rowDragItem.splice(dragItem.indexCol,1);
+                }else if(action==="after"){
+                  rowDrogItem.splice((indexCol+1), 0, widgets);
+                  rowDragItem.splice(dragItem.indexCol,1);
+                }
+                widgetConfig.widgets[indexRow]=rowDrogItem;
+                if(!rowDragItem || rowDragItem.length==0){
+                  widgetConfig.widgets.splice(dragItem.indexRow,1);
+                }else{
+                  widgetConfig.widgets[dragItem.indexRow]=rowDragItem;
+                }
+
+              }
+              widgetConfig.widgets.map(function(rowWidgets, indexRow){
+                 var numCol=12/(rowWidgets.length);
+                 rowWidgets.map(function(widget, indexCol){
+                   rowWidgets[indexCol]["col"]=numCol;
+                 });
+              });
+            }
+            this.setState({widgetConfig:widgetConfig,focusWidgets:""});
+          }
+        }
       }
     },
-
+    // set Highlight draggable area
     onDragOverHighlights:function(indexRow,indexCol,event){
       event.preventDefault();
       var focusHighlights=this.state.focusHighlights;
@@ -186,35 +326,25 @@ var MainDnD = React.createClass({
       }else if(dragItem && this.checkNumber(dragItem.indexRow)){
         if(focusHighlights.indexRow===indexRow && focusHighlights.indexCol===indexCol && this.state.finishFocusHighlights){
           return;
-        }
-        // one
-        if(dragItem.indexRow===indexRow && dragItem.indexCol===indexCol && dragItem.col!=12){
-          focusHighlights.indexRow=indexRow;
-          focusHighlights.indexCol=indexCol;
-          if(indexRow>0){
-            focusHighlights.list.push(indexRow-1);
-          }
-          // if(this.checkNumber(indexCol)){
-          //   focusHighlights.list.push(indexRow+"."+indexCol+".before");
-          //   focusHighlights.list.push(indexRow+"."+indexCol+".after");
-          // }
-          // if(indexCol>0){
-          //   focusHighlights.list.push(indexRow+"."+(indexCol-1)+".after");
-          // }
         }else{
-
+          // one
+            focusHighlights=this.calChangeHighlights(dragItem,indexRow,indexCol);
+            var checkSameLine=false;
+            if(dragItem.indexRow==indexRow){
+              checkSameLine=true;
+            }
+            this.setState({focusHighlights:focusHighlights,finishFocusHighlights:true,checkSameLine:checkSameLine});
         }
       }
-
     },
-
+    // remove Highlight draggable area
     onDragLeaveHighlights:function(indexRow,indexCol){
       event.preventDefault();
       var focusHighlights=this.state.focusHighlights;
       var dragItem=this.state.dragItem;
       // if(this.state.componentType ){
       if(focusHighlights.indexRow===indexRow && focusHighlights.indexCol===indexCol){
-        this.setState({focusHighlights:JSON.parse(JSON.stringify(focusHighlightDefault))});
+        this.setState({focusHighlights:JSON.parse(JSON.stringify(focusHighlightDefault)),finishFocusHighlights:false});
       }
       // }else if(dragItem && this.checkNumber(dragItem.indexRow)){
       //
@@ -226,6 +356,7 @@ var MainDnD = React.createClass({
         <div className="dashboard-page dashboard-new-layout">
           <div id="page-title">
             <h1 className="page-header">Dashboard</h1>
+            Data: {JSON.stringify(this.state.widgetConfig)}
             <div className="dashTools">
                 <a href="#" className=""></a>
                 <a href="#"  className={(this.state.isOpen ? 'isActive' : '')} onClick={this.isOpenTool} ><i className="fa fa-plus"></i></a>
@@ -233,9 +364,9 @@ var MainDnD = React.createClass({
           </div>
           {!(this.state.widgetConfig && this.state.widgetConfig.widgets && this.state.widgetConfig.widgets.length) &&
             <div className={'main-content '+ (this.state.isOpen ? 'isOpenTool' : '')}
-              onDragOver={this.onDragOverWidget.bind(this,"addWidgets")}
+              onDragOver={this.onDragOverWidget.bind(this,"addWidgets",null,null)}
               onDragLeave={this.onDragLeaveWidget.bind(this,"addWidgets")}
-              onDrop={this.onDropEndWidget.bind(this,"snapshots",null,null,"")}>
+              onDrop={this.onDropEndWidget.bind(this,"snapshots",null,null,"","")}>
                 <div className={"box__input-addWidget" + (this.state.focusWidgets==="addWidgets" ? ' choose ' : ' no-choose ')} >
                     <span> + ADD  WIDGET</span>
                 </div>
@@ -248,19 +379,19 @@ var MainDnD = React.createClass({
                   return (
                     <div>
                       <div className="row" key={indexRow}>
-                        { row.length < limitRow &&
+                        { ( (row.length < limitRow)  || (this.state.checkSameLine && row.length <= limitRow) )&&
                           <div className={"point-focus-begin"+ (this.state.focusWidgets===(indexRow+".0.before") ? ' choose ' : ' no-choose ')
                               + (this.state.focusHighlights.list.indexOf(indexRow+"."+"0"+".before")>=0  ? ' highlight ' : '') }
                               key={indexRow+"."+"0"+".before"}
                               onDragLeave={this.onDragLeaveWidget.bind(this,indexRow+".0.before")}
-                              onDragOver={this.onDragOverWidget.bind(this,indexRow+".0.before")}
-                              onDrop={this.onDropEndWidget.bind(this,"snapshots",indexRow,0,"before")}
+                              onDragOver={this.onDragOverWidget.bind(this,indexRow+".0.before",indexRow,0)}
+                              onDrop={this.onDropEndWidget.bind(this,"snapshots",indexRow,0,"before",indexRow+".0.before")}
                           ></div>
                         }
                         {(() => {
                           var colWidgets=row.length-1;
                           var rowWidgets=[];
-                          if(colWidgets>=1 && row.length < limitRow){
+                          if(colWidgets>=1 && ( (row.length < limitRow) || (this.state.checkSameLine && row.length <= limitRow) ) ){
                             for (var col = 0; col < colWidgets; col++) {
                               var left= ((100/row.length)*(col+1))+"%";
                               rowWidgets.push(
@@ -268,8 +399,8 @@ var MainDnD = React.createClass({
                                     + (this.state.focusHighlights.list.indexOf(indexRow+"."+col+".after")>=0  ? ' highlight ' : '') }
                                     key={indexRow+"."+col+".after"}
                                     onDragLeave={this.onDragLeaveWidget.bind(this,indexRow+"."+col+".after")}
-                                    onDragOver={this.onDragOverWidget.bind(this,indexRow+"."+col+".after")}
-                                    onDrop={this.onDropEndWidget.bind(this,"snapshots",indexRow,col,"after")}></div>
+                                    onDragOver={this.onDragOverWidget.bind(this,indexRow+"."+col+".after",indexRow,col)}
+                                    onDrop={this.onDropEndWidget.bind(this,"snapshots",indexRow,col,"after",indexRow+"."+col+".after")}></div>
 
                               );
                             }
@@ -297,13 +428,13 @@ var MainDnD = React.createClass({
                             );
                           })
                         }
-                        { row.length < limitRow &&
+                        { ((row.length < limitRow) || (this.state.checkSameLine && row.length <= limitRow)) &&
                           <div className={"point-focus-end"+(this.state.focusWidgets===(indexRow+"."+(row.length-1)+".after") ? ' choose ' : ' no-choose ')
                               + (this.state.focusHighlights.list.indexOf(indexRow+"."+(row.length-1)+".after")>=0  ? ' highlight ' : '') }
                               key={indexRow+"."+(row.length-1)+".after"}
                               onDragLeave={this.onDragLeaveWidget.bind(this,indexRow+"."+(row.length-1)+".after")}
-                              onDragOver={this.onDragOverWidget.bind(this,indexRow+"."+(row.length-1)+".after")}
-                              onDrop={this.onDropEndWidget.bind(this,"snapshots",indexRow,(row.length-1),"after")}></div>
+                              onDragOver={this.onDragOverWidget.bind(this,indexRow+"."+(row.length-1)+".after",indexRow,(row.length-1))}
+                              onDrop={this.onDropEndWidget.bind(this,"snapshots",indexRow,(row.length-1),"after",indexRow+"."+(row.length-1)+".after")}></div>
                         }
 
                       </div>
@@ -311,8 +442,8 @@ var MainDnD = React.createClass({
                         + (this.state.focusHighlights.list.indexOf(indexRow)>=0  ? ' highlight ' : '') }
                         key={indexRow+"."+".bottom"}
                         onDragLeave={this.onDragLeaveWidget.bind(this,indexRow+".bottom")}
-                        onDragOver={this.onDragOverWidget.bind(this,indexRow+".bottom")}
-                        onDrop={this.onDropEndWidget.bind(this,"snapshots",indexRow,null,"")}>
+                        onDragOver={this.onDragOverWidget.bind(this,indexRow+".bottom",indexRow,null)}
+                        onDrop={this.onDropEndWidget.bind(this,"snapshots",indexRow,null,"",indexRow+".bottom")}>
                       </div>
                     </div>
                   );

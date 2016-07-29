@@ -21138,12 +21138,13 @@
 	      checkFinished: false,
 	      focusWidgets: "",
 	      focusHighlights: JSON.parse(JSON.stringify(focusHighlightDefault)),
+	      // check when sort able widget
 	      finishFocusHighlights: false,
 	      isOpen: false,
 	      componentType: "",
 	      widgetConfig: JSON.parse(JSON.stringify(widgetConfigDefault)),
-	      dragItem: JSON.parse(JSON.stringify(dragItemDefault))
-
+	      dragItem: JSON.parse(JSON.stringify(dragItemDefault)),
+	      checkSameLine: false
 	    };
 	  },
 
@@ -21167,12 +21168,62 @@
 	    return check;
 	  },
 
+	  // check number
+	  checkDistanceCol: function checkDistanceCol(value1, value2) {
+	    var distance = Math.abs(value1 - value2);
+	    return distance;
+	  },
+
+	  calChangeHighlights: function calChangeHighlights(dragItem, indexRow, indexCol) {
+	    var focusHighlights = JSON.parse(JSON.stringify(focusHighlightDefault));
+	    if (dragItem.indexRow === indexRow) {
+	      focusHighlights.indexRow = indexRow;
+	      focusHighlights.indexCol = indexCol;
+	      if (indexRow > 0 && dragItem.data.col != 12) {
+	        focusHighlights.list.push(indexRow - 1);
+	        focusHighlights.list.push(indexRow - 1 + ".bottom");
+	      }
+	      if (dragItem.data.col != 12) {
+	        focusHighlights.list.push(indexRow);
+	        focusHighlights.list.push(indexRow + ".bottom");
+	      }
+	      if (dragItem.indexCol !== indexCol) {
+	        focusHighlights.list.push(indexRow + "." + indexCol + ".before");
+	        if (dragItem.indexCol < indexCol || this.checkDistanceCol(indexCol, dragItem.indexCol) > 1) {
+	          focusHighlights.list.push(indexRow + "." + indexCol + ".after");
+	        }
+	      }
+	      if (indexCol > 0 && (dragItem.indexCol > indexCol || this.checkDistanceCol(dragItem.indexCol, indexCol) > 1)) {
+	        focusHighlights.list.push(indexRow + "." + (indexCol - 1) + ".after");
+	      }
+	    } else {
+	      focusHighlights.indexRow = indexRow;
+	      focusHighlights.indexCol = indexCol;
+	      if (dragItem.data.col != 12) {
+	        focusHighlights.list.push(indexRow);
+	        focusHighlights.list.push(indexRow + ".bottom");
+	      }
+	      if (indexRow > 0 && dragItem.data.col != 12) {
+	        focusHighlights.list.push(indexRow - 1);
+	        focusHighlights.list.push(indexRow - 1 + ".bottom");
+	      }
+	      if (this.checkNumber(indexCol)) {
+	        focusHighlights.list.push(indexRow + "." + indexCol + ".before");
+	        focusHighlights.list.push(indexRow + "." + indexCol + ".after");
+	      }
+	      if (indexCol > 0) {
+	        focusHighlights.list.push(indexRow + "." + (indexCol - 1) + ".after");
+	      }
+	    }
+	    return focusHighlights;
+	  },
+
 	  // add Widget (ADD)
 	  onDragStartWidget: function onDragStartWidget(componentType, event) {
 	    event.dataTransfer.effectAllowed = 'move';
 	    // setData() is necessary for starting the drag in firefox
 	    event.dataTransfer.setData('text', 'dummy');
-	    this.setState({ componentType: componentType, dragItem: JSON.parse(JSON.stringify(dragItemDefault)) });
+	    this.setState({ componentType: componentType, dragItem: JSON.parse(JSON.stringify(dragItemDefault)), checkSameLine: false });
 	  },
 
 	  // add Widget (ADD)
@@ -21189,17 +21240,27 @@
 	    this.setState({ componentType: "", dragItem: dragItem, focusHighlights: JSON.parse(JSON.stringify(focusHighlightDefault)) });
 	  },
 
-	  // over Widget (ADD)
-	  onDragOverWidget: function onDragOverWidget(focusWidgets, event) {
+	  // over Widget (ADD-CHANGE)
+	  onDragOverWidget: function onDragOverWidget(focusWidgets, indexRow, indexCol, event) {
 	    event.preventDefault();
+	    // Over when ADD
+	    var dragItem = this.state.dragItem;
 	    if (this.state.componentType) {
 	      if (this.state.focusWidgets || this.state.focusWidgets !== focusWidgets) {
 	        this.setState({ focusWidgets: focusWidgets, focusHighlights: JSON.parse(JSON.stringify(focusHighlightDefault)) });
 	      }
+	      // Over when change
+	    } else if (dragItem && this.checkNumber(dragItem.indexRow)) {
+	      var focusHighlights = this.calChangeHighlights(dragItem, indexRow, indexCol);
+	      if (focusHighlights.list && focusHighlights.list.length > 0) {
+	        if (focusHighlights.list.indexOf(focusWidgets) > -1) {
+	          this.setState({ focusWidgets: focusWidgets, focusHighlights: JSON.parse(JSON.stringify(focusHighlightDefault)) });
+	        }
+	      }
 	    }
 	  },
 
-	  // drag leave widget (ADD)
+	  // leave widget (ADD-CHANGE)
 	  onDragLeaveWidget: function onDragLeaveWidget(focusWidgets, event) {
 	    event.preventDefault();
 	    // if(this.state.componentType){
@@ -21215,10 +21276,11 @@
 	    this.setState({ componentType: "", focusHighlights: JSON.parse(JSON.stringify(focusHighlightDefault)) });
 	  },
 
-	  // drop end widget (ADD)
-	  onDropEndWidget: function onDropEndWidget(componentType, indexRow, indexCol, action, event) {
+	  // drop end widget (ADD-CHANGE)
+	  onDropEndWidget: function onDropEndWidget(componentType, indexRow, indexCol, action, focusWidgets, event) {
 	    event.preventDefault();
 	    var widgetConfig = this.state.widgetConfig;
+	    var dragItem = this.state.dragItem;
 	    if (this.state.componentType) {
 	      var widgets = {
 	        "col": "12",
@@ -21249,9 +21311,86 @@
 	        widgetConfig.widgets[indexRow] = rowWidgets;
 	        this.setState({ widgetConfig: widgetConfig, focusWidgets: "" });
 	      }
+	    } else if (dragItem && this.checkNumber(dragItem.indexRow)) {
+	      var focusHighlights = this.calChangeHighlights(dragItem, indexRow, indexCol);
+	      if (focusHighlights.list && focusHighlights.list.length > 0) {
+	        if (focusHighlights.list.indexOf(focusWidgets) > -1) {
+	          var rowDragItem = JSON.parse(JSON.stringify(widgetConfig.widgets[dragItem.indexRow]));
+
+	          if (dragItem.indexRow == indexRow) {
+	            var widgets = rowDragItem[dragItem.indexCol];
+	            if (!this.checkNumber(indexCol)) {
+	              var index = indexRow + 1;
+	              widgetConfig.widgets.splice(index, 0, [widgets]);
+	              rowDragItem.splice(dragItem.indexCol, 1);
+	              if (!rowDragItem || rowDragItem.length == 0) {
+	                widgetConfig.widgets.splice(dragItem.indexRow, 0);
+	              } else {
+	                widgetConfig.widgets[dragItem.indexRow] = rowDragItem;
+	              }
+	              // add col & row
+	            } else {
+	              if (action === "before") {
+	                rowDragItem.splice(indexCol, 0, widgets);
+	              } else if (action === "after") {
+	                rowDragItem.splice(indexCol + 1, 0, widgets);
+	              }
+	              if (dragItem.indexCol > indexCol) {
+	                rowDragItem.splice(dragItem.indexCol + 1, 1);
+	              } else {
+	                rowDragItem.splice(dragItem.indexCol, 1);
+	              }
+	              widgetConfig.widgets[dragItem.indexRow] = rowDragItem;
+	            }
+	            widgetConfig.widgets.map(function (rowWidgets, indexRow) {
+	              var numCol = 12 / rowWidgets.length;
+	              rowWidgets.map(function (widget, indexCol) {
+	                rowWidgets[indexCol]["col"] = numCol;
+	              });
+	            });
+	          } else if (dragItem.indexRow != indexRow) {
+	            var rowDragItem = JSON.parse(JSON.stringify(widgetConfig.widgets[dragItem.indexRow]));
+	            var rowDrogItem = JSON.parse(JSON.stringify(widgetConfig.widgets[indexRow]));
+	            var widgets = rowDragItem[dragItem.indexCol];
+	            if (!this.checkNumber(indexCol)) {
+	              var index = indexRow + 1;
+	              rowDragItem.splice(dragItem.indexCol, 1);
+	              if (!rowDragItem || rowDragItem.length == 0) {
+	                widgetConfig.widgets.splice(dragItem.indexRow, 0);
+	              } else {
+	                widgetConfig.widgets[dragItem.indexRow] = rowDragItem;
+	              }
+	              widgetConfig.widgets.splice(index, 0, [widgets]);
+	              widgetConfig.widgets[dragItem.indexRow] = rowDragItem;
+	              // add col & row
+	            } else {
+	              if (action === "before") {
+	                rowDrogItem.splice(indexCol, 0, widgets);
+	                rowDragItem.splice(dragItem.indexCol, 1);
+	              } else if (action === "after") {
+	                rowDrogItem.splice(indexCol + 1, 0, widgets);
+	                rowDragItem.splice(dragItem.indexCol, 1);
+	              }
+	              widgetConfig.widgets[indexRow] = rowDrogItem;
+	              if (!rowDragItem || rowDragItem.length == 0) {
+	                widgetConfig.widgets.splice(dragItem.indexRow, 1);
+	              } else {
+	                widgetConfig.widgets[dragItem.indexRow] = rowDragItem;
+	              }
+	            }
+	            widgetConfig.widgets.map(function (rowWidgets, indexRow) {
+	              var numCol = 12 / rowWidgets.length;
+	              rowWidgets.map(function (widget, indexCol) {
+	                rowWidgets[indexCol]["col"] = numCol;
+	              });
+	            });
+	          }
+	          this.setState({ widgetConfig: widgetConfig, focusWidgets: "" });
+	        }
+	      }
 	    }
 	  },
-
+	  // set Highlight draggable area
 	  onDragOverHighlights: function onDragOverHighlights(indexRow, indexCol, event) {
 	    event.preventDefault();
 	    var focusHighlights = this.state.focusHighlights;
@@ -21280,32 +21419,25 @@
 	    } else if (dragItem && this.checkNumber(dragItem.indexRow)) {
 	      if (focusHighlights.indexRow === indexRow && focusHighlights.indexCol === indexCol && this.state.finishFocusHighlights) {
 	        return;
-	      }
-	      // one
-	      if (dragItem.indexRow === indexRow && dragItem.indexCol === indexCol && dragItem.col != 12) {
-	        focusHighlights.indexRow = indexRow;
-	        focusHighlights.indexCol = indexCol;
-	        if (indexRow > 0) {
-	          focusHighlights.list.push(indexRow - 1);
+	      } else {
+	        // one
+	        focusHighlights = this.calChangeHighlights(dragItem, indexRow, indexCol);
+	        var checkSameLine = false;
+	        if (dragItem.indexRow == indexRow) {
+	          checkSameLine = true;
 	        }
-	        // if(this.checkNumber(indexCol)){
-	        //   focusHighlights.list.push(indexRow+"."+indexCol+".before");
-	        //   focusHighlights.list.push(indexRow+"."+indexCol+".after");
-	        // }
-	        // if(indexCol>0){
-	        //   focusHighlights.list.push(indexRow+"."+(indexCol-1)+".after");
-	        // }
-	      } else {}
+	        this.setState({ focusHighlights: focusHighlights, finishFocusHighlights: true, checkSameLine: checkSameLine });
+	      }
 	    }
 	  },
-
+	  // remove Highlight draggable area
 	  onDragLeaveHighlights: function onDragLeaveHighlights(indexRow, indexCol) {
 	    event.preventDefault();
 	    var focusHighlights = this.state.focusHighlights;
 	    var dragItem = this.state.dragItem;
 	    // if(this.state.componentType ){
 	    if (focusHighlights.indexRow === indexRow && focusHighlights.indexCol === indexCol) {
-	      this.setState({ focusHighlights: JSON.parse(JSON.stringify(focusHighlightDefault)) });
+	      this.setState({ focusHighlights: JSON.parse(JSON.stringify(focusHighlightDefault)), finishFocusHighlights: false });
 	    }
 	    // }else if(dragItem && this.checkNumber(dragItem.indexRow)){
 	    //
@@ -21326,6 +21458,8 @@
 	          { className: 'page-header' },
 	          'Dashboard'
 	        ),
+	        'Data: ',
+	        JSON.stringify(this.state.widgetConfig),
 	        React.createElement(
 	          'div',
 	          { className: 'dashTools' },
@@ -21340,9 +21474,9 @@
 	      !(this.state.widgetConfig && this.state.widgetConfig.widgets && this.state.widgetConfig.widgets.length) && React.createElement(
 	        'div',
 	        { className: 'main-content ' + (this.state.isOpen ? 'isOpenTool' : ''),
-	          onDragOver: this.onDragOverWidget.bind(this, "addWidgets"),
+	          onDragOver: this.onDragOverWidget.bind(this, "addWidgets", null, null),
 	          onDragLeave: this.onDragLeaveWidget.bind(this, "addWidgets"),
-	          onDrop: this.onDropEndWidget.bind(this, "snapshots", null, null, "") },
+	          onDrop: this.onDropEndWidget.bind(this, "snapshots", null, null, "", "") },
 	        React.createElement(
 	          'div',
 	          { className: "box__input-addWidget" + (this.state.focusWidgets === "addWidgets" ? ' choose ' : ' no-choose ') },
@@ -21363,23 +21497,23 @@
 	            React.createElement(
 	              'div',
 	              { className: 'row', key: indexRow },
-	              row.length < limitRow && React.createElement('div', { className: "point-focus-begin" + (_this.state.focusWidgets === indexRow + ".0.before" ? ' choose ' : ' no-choose ') + (_this.state.focusHighlights.list.indexOf(indexRow + "." + "0" + ".before") >= 0 ? ' highlight ' : ''),
+	              (row.length < limitRow || _this.state.checkSameLine && row.length <= limitRow) && React.createElement('div', { className: "point-focus-begin" + (_this.state.focusWidgets === indexRow + ".0.before" ? ' choose ' : ' no-choose ') + (_this.state.focusHighlights.list.indexOf(indexRow + "." + "0" + ".before") >= 0 ? ' highlight ' : ''),
 	                key: indexRow + "." + "0" + ".before",
 	                onDragLeave: _this.onDragLeaveWidget.bind(_this, indexRow + ".0.before"),
-	                onDragOver: _this.onDragOverWidget.bind(_this, indexRow + ".0.before"),
-	                onDrop: _this.onDropEndWidget.bind(_this, "snapshots", indexRow, 0, "before")
+	                onDragOver: _this.onDragOverWidget.bind(_this, indexRow + ".0.before", indexRow, 0),
+	                onDrop: _this.onDropEndWidget.bind(_this, "snapshots", indexRow, 0, "before", indexRow + ".0.before")
 	              }),
 	              function () {
 	                var colWidgets = row.length - 1;
 	                var rowWidgets = [];
-	                if (colWidgets >= 1 && row.length < limitRow) {
+	                if (colWidgets >= 1 && (row.length < limitRow || _this.state.checkSameLine && row.length <= limitRow)) {
 	                  for (var col = 0; col < colWidgets; col++) {
 	                    var left = 100 / row.length * (col + 1) + "%";
 	                    rowWidgets.push(React.createElement('div', { style: { 'left': left }, className: "point-focus-end-col-" + col + " point-focus-end-col " + (_this.state.focusWidgets === indexRow + "." + col + ".after" ? ' choose ' : ' no-choose ') + (_this.state.focusHighlights.list.indexOf(indexRow + "." + col + ".after") >= 0 ? ' highlight ' : ''),
 	                      key: indexRow + "." + col + ".after",
 	                      onDragLeave: _this.onDragLeaveWidget.bind(_this, indexRow + "." + col + ".after"),
-	                      onDragOver: _this.onDragOverWidget.bind(_this, indexRow + "." + col + ".after"),
-	                      onDrop: _this.onDropEndWidget.bind(_this, "snapshots", indexRow, col, "after") }));
+	                      onDragOver: _this.onDragOverWidget.bind(_this, indexRow + "." + col + ".after", indexRow, col),
+	                      onDrop: _this.onDropEndWidget.bind(_this, "snapshots", indexRow, col, "after", indexRow + "." + col + ".after") }));
 	                  }
 	                }
 	                return rowWidgets;
@@ -21417,17 +21551,17 @@
 	                  )
 	                );
 	              }),
-	              row.length < limitRow && React.createElement('div', { className: "point-focus-end" + (_this.state.focusWidgets === indexRow + "." + (row.length - 1) + ".after" ? ' choose ' : ' no-choose ') + (_this.state.focusHighlights.list.indexOf(indexRow + "." + (row.length - 1) + ".after") >= 0 ? ' highlight ' : ''),
+	              (row.length < limitRow || _this.state.checkSameLine && row.length <= limitRow) && React.createElement('div', { className: "point-focus-end" + (_this.state.focusWidgets === indexRow + "." + (row.length - 1) + ".after" ? ' choose ' : ' no-choose ') + (_this.state.focusHighlights.list.indexOf(indexRow + "." + (row.length - 1) + ".after") >= 0 ? ' highlight ' : ''),
 	                key: indexRow + "." + (row.length - 1) + ".after",
 	                onDragLeave: _this.onDragLeaveWidget.bind(_this, indexRow + "." + (row.length - 1) + ".after"),
-	                onDragOver: _this.onDragOverWidget.bind(_this, indexRow + "." + (row.length - 1) + ".after"),
-	                onDrop: _this.onDropEndWidget.bind(_this, "snapshots", indexRow, row.length - 1, "after") })
+	                onDragOver: _this.onDragOverWidget.bind(_this, indexRow + "." + (row.length - 1) + ".after", indexRow, row.length - 1),
+	                onDrop: _this.onDropEndWidget.bind(_this, "snapshots", indexRow, row.length - 1, "after", indexRow + "." + (row.length - 1) + ".after") })
 	            ),
 	            React.createElement('div', { className: "row point-bottom" + (_this.state.focusWidgets === indexRow + ".bottom" ? ' choose ' : ' no-choose ') + (_this.state.focusHighlights.list.indexOf(indexRow) >= 0 ? ' highlight ' : ''),
 	              key: indexRow + "." + ".bottom",
 	              onDragLeave: _this.onDragLeaveWidget.bind(_this, indexRow + ".bottom"),
-	              onDragOver: _this.onDragOverWidget.bind(_this, indexRow + ".bottom"),
-	              onDrop: _this.onDropEndWidget.bind(_this, "snapshots", indexRow, null, "") })
+	              onDragOver: _this.onDragOverWidget.bind(_this, indexRow + ".bottom", indexRow, null),
+	              onDrop: _this.onDropEndWidget.bind(_this, "snapshots", indexRow, null, "", indexRow + ".bottom") })
 	          );
 	        })
 	      ),
