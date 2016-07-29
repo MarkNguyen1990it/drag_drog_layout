@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>React DnD Example</title>
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/cms-dashboard.css">
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css">
+    <style type="text/css">
+        #root{
+            padding: 5em;
+        }
+        .layout > div{
+            padding: 5px;
+            -webkit-transition: all 0.3s ease;
+            -moz-transition: all 0.3s ease;
+            -o-transition: all 0.3s ease;
+            -ms-transition: all 0.3s ease;
+            transition: all 0.3s ease;
+        }
+        .layout > div > div
+        {
+            overflow:hidden;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+        }
+        .layout > div > div.active{
+            border: 2px dashed #27ae60;
+        }
+        .layout > div > div.passive{
+            border: 2px dashed #c0392b;
+        }
+    </style>
+</head>
+<body>
+<div id="root"></div>
+<script src="/js/bundle.js"></script>
+</body>
+</html>
