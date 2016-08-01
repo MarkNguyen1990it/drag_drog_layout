@@ -1,0 +1,20 @@
+.hidden {
+  display: none;
+}
+.display_block {
+  display: block;
+}
+
+.display_none {
+  display: none;
+}
+
+.main-content.isOpenTool.switch-on .moduleCategories.isOpenTool
+{
+  display: none;
+}
+
+body
+{
+  overflow-x: hidden;
+}
