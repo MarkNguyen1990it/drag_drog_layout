@@ -21140,10 +21140,15 @@
 	      focusHighlights: JSON.parse(JSON.stringify(focusHighlightDefault)),
 	      // check when sort able widget
 	      finishFocusHighlights: false,
+	      // check open add widget
 	      isOpen: false,
+	      // add componentType ( Add widget)
 	      componentType: "",
+	      // data widget config
 	      widgetConfig: JSON.parse(JSON.stringify(widgetConfigDefault)),
+	      // drag irem
 	      dragItem: JSON.parse(JSON.stringify(dragItemDefault)),
+	      // check same line
 	      checkSameLine: false
 	    };
 	  },
@@ -21174,6 +21179,12 @@
 	    return distance;
 	  },
 
+	  // check number
+	  checkDistanceRow: function checkDistanceRow(value1, value2) {
+	    var distance = Math.abs(value1 - value2);
+	    return distance;
+	  },
+
 	  calChangeHighlights: function calChangeHighlights(dragItem, indexRow, indexCol) {
 	    var focusHighlights = JSON.parse(JSON.stringify(focusHighlightDefault));
 	    if (dragItem.indexRow === indexRow) {
@@ -21199,11 +21210,11 @@
 	    } else {
 	      focusHighlights.indexRow = indexRow;
 	      focusHighlights.indexCol = indexCol;
-	      if (dragItem.data.col != 12) {
+	      if (dragItem.data.col != 12 || dragItem.indexRow < indexRow || this.checkDistanceRow(dragItem.indexRow, indexRow) > 1) {
 	        focusHighlights.list.push(indexRow);
 	        focusHighlights.list.push(indexRow + ".bottom");
 	      }
-	      if (indexRow > 0 && dragItem.data.col != 12) {
+	      if (indexRow > 0 && (dragItem.data.col != 12 || this.checkDistanceCol(dragItem.indexRow, indexRow - 1) >= 1)) {
 	        focusHighlights.list.push(indexRow - 1);
 	        focusHighlights.list.push(indexRow - 1 + ".bottom");
 	      }
@@ -21324,7 +21335,7 @@
 	              widgetConfig.widgets.splice(index, 0, [widgets]);
 	              rowDragItem.splice(dragItem.indexCol, 1);
 	              if (!rowDragItem || rowDragItem.length == 0) {
-	                widgetConfig.widgets.splice(dragItem.indexRow, 0);
+	                widgetConfig.widgets.splice(dragItem.indexRow, 1);
 	              } else {
 	                widgetConfig.widgets[dragItem.indexRow] = rowDragItem;
 	              }
@@ -21348,20 +21359,32 @@
 	                rowWidgets[indexCol]["col"] = numCol;
 	              });
 	            });
+	            // move not one row
 	          } else if (dragItem.indexRow != indexRow) {
 	            var rowDragItem = JSON.parse(JSON.stringify(widgetConfig.widgets[dragItem.indexRow]));
 	            var rowDrogItem = JSON.parse(JSON.stringify(widgetConfig.widgets[indexRow]));
 	            var widgets = rowDragItem[dragItem.indexCol];
 	            if (!this.checkNumber(indexCol)) {
 	              var index = indexRow + 1;
-	              rowDragItem.splice(dragItem.indexCol, 1);
-	              if (!rowDragItem || rowDragItem.length == 0) {
-	                widgetConfig.widgets.splice(dragItem.indexRow, 0);
+	              if (dragItem.data.col == 12) {
+	                widgetConfig.widgets.splice(index, 0, [widgets]);
+	                if (dragItem.indexRow > indexRow) {
+	                  widgetConfig.widgets.splice(dragItem.indexRow + 1, 1);
+	                } else {
+	                  widgetConfig.widgets.splice(dragItem.indexRow, 1);
+	                }
 	              } else {
+	                rowDragItem.splice(dragItem.indexCol, 1);
 	                widgetConfig.widgets[dragItem.indexRow] = rowDragItem;
+	                widgetConfig.widgets.splice(index, 0, [widgets]);
+	                if (!rowDragItem || rowDragItem.length == 0) {
+	                  if (dragItem.indexRow > indexRow) {
+	                    widgetConfig.widgets.splice(dragItem.indexRow + 1, 1);
+	                  } else {
+	                    widgetConfig.widgets.splice(dragItem.indexRow, 1);
+	                  }
+	                }
 	              }
-	              widgetConfig.widgets.splice(index, 0, [widgets]);
-	              widgetConfig.widgets[dragItem.indexRow] = rowDragItem;
 	              // add col & row
 	            } else {
 	              if (action === "before") {
@@ -21458,8 +21481,6 @@
 	          { className: 'page-header' },
 	          'Dashboard'
 	        ),
-	        'Data: ',
-	        JSON.stringify(this.state.widgetConfig),
 	        React.createElement(
 	          'div',
 	          { className: 'dashTools' },
