@@ -4,7 +4,8 @@ var http = require('http'),
 var app = express();
 
 app.set('port', 9000);
-app.use(express.static(path.join(__dirname, 'public')));
+app.use( '/public', express.static( path.resolve( __dirname, 'public' )));
+app.use( '/calypso', express.static( path.resolve( __dirname, 'calypso' )));
 
 // Always serve the same HTML file for all requests
 app.get('*', function(req, res, next) {

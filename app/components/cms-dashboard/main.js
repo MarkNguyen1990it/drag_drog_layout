@@ -1,6 +1,5 @@
 var React = require('react');
-var DragDropContext = require('react-dnd').DragDropContext;
-var HTML5Backend = require('react-dnd-html5-backend');
+
 
 
 var focusHighlightDefault={
@@ -13,7 +12,8 @@ var widgetConfigDefault={
     affiliateId: "0",
     widgets: [
 
-    ]
+    ],
+    user : "demo"
 };
 
 var limitRow=3;
@@ -21,6 +21,12 @@ var dragItemDefault = {
   indexRow :"",
   indexCol :"",
   data:{},
+}
+
+var contextMenuDefault = {
+  indexRow :"",
+  indexCol :"",
+  check : false,
 }
 
 
@@ -44,7 +50,10 @@ var MainDnD = React.createClass({
           // drag irem
           dragItem : JSON.parse(JSON.stringify(dragItemDefault)),
           // check same line
-          checkSameLine : false
+          checkSameLine : false,
+          designSwitch:false,
+          contextMenu :  JSON.parse(JSON.stringify(contextMenuDefault)),
+          backUpWidgets : []
         };
     },
 
@@ -54,8 +63,21 @@ var MainDnD = React.createClass({
 
     isOpenTool: function(e) {
       e.preventDefault();
-      this.setState( { isOpen: !this.state.isOpen } );
+      this.setState( { isOpen: !this.state.isOpen ,designSwitch : false } );
     },
+    isDesignSwitch: function(e) {
+      e.preventDefault();
+      var designSwitch=!this.state.designSwitch;
+      var widgetConfig=this.state.widgetConfig;
+      if(designSwitch){
+        var backUpWidgets=JSON.parse(JSON.stringify(widgetConfig.widgets));
+        this.setState( { designSwitch: designSwitch ,isOpen : false , backUpWidgets : backUpWidgets } );
+      }else{
+        this.setState( { designSwitch: designSwitch ,isOpen : false} );
+      }
+
+    },
+
 
 
     saveCMSDashBoard : function(divs){
@@ -89,6 +111,9 @@ var MainDnD = React.createClass({
 
     calChangeHighlights : function(dragItem,indexRow,indexCol){
       var focusHighlights = JSON.parse(JSON.stringify(focusHighlightDefault));
+      if(!this.state.designSwitch){
+        return focusHighlights;
+      }
       if (dragItem.indexRow === indexRow) {
         focusHighlights.indexRow = indexRow;
         focusHighlights.indexCol = indexCol;
@@ -151,8 +176,9 @@ var MainDnD = React.createClass({
       dragItem["indexRow"]=indexRow;
       dragItem["indexCol"]=indexCol;
       dragItem["data"]=JSON.parse(JSON.stringify(data));
-      this.setState({componentType:"",dragItem:dragItem,focusHighlights:JSON.parse(JSON.stringify(focusHighlightDefault))});
-
+      if(this.state.designSwitch){
+        this.setState({componentType:"",dragItem:dragItem,focusHighlights:JSON.parse(JSON.stringify(focusHighlightDefault))});
+      }
     },
 
     // over Widget (ADD-CHANGE)
@@ -188,7 +214,7 @@ var MainDnD = React.createClass({
     // drag end widget (ADD)
     onDragEndWidget : function(event){
       event.preventDefault();
-      this.setState({componentType:"",focusHighlights:JSON.parse(JSON.stringify(focusHighlightDefault))});
+      this.setState({dragItem : JSON.parse(JSON.stringify(dragItemDefault)),componentType:"",focusHighlights:JSON.parse(JSON.stringify(focusHighlightDefault))});
     },
 
     // drop end widget (ADD-CHANGE)
@@ -226,7 +252,7 @@ var MainDnD = React.createClass({
             rowWidgets[index]["col"]=numCol;
           });
           widgetConfig.widgets[indexRow]=rowWidgets;
-          this.setState({widgetConfig:widgetConfig,focusWidgets:""});
+          this.setState({widgetConfig:widgetConfig,focusWidgets:"",contextMenu:JSON.parse(JSON.stringify(contextMenuDefault))});
         }
       }else if(dragItem && this.checkNumber(dragItem.indexRow)){
         var focusHighlights=this.calChangeHighlights(dragItem,indexRow,indexCol);
@@ -315,7 +341,7 @@ var MainDnD = React.createClass({
                  });
               });
             }
-            this.setState({widgetConfig:widgetConfig,focusWidgets:""});
+            this.setState({widgetConfig:widgetConfig,focusWidgets:"",contextMenu:JSON.parse(JSON.stringify(contextMenuDefault))});
           }
         }
       }
@@ -374,16 +400,84 @@ var MainDnD = React.createClass({
       // }
     },
 
+    // drag end widget (ADD)
+    onRemoveWidget : function(indexRow,indexCol,event){
+      var widgetConfig=this.state.widgetConfig;
+      var rowWidgets= JSON.parse(JSON.stringify(widgetConfig.widgets[indexRow]));
+      rowWidgets.splice(indexCol,1);
+      var numCol=12/(rowWidgets.length);
+      rowWidgets.map(function(item,index){
+        rowWidgets[index]["col"]=numCol;
+      });
+      widgetConfig.widgets[indexRow]=rowWidgets;
+      if(!rowWidgets || rowWidgets.length==0){
+        widgetConfig.widgets.splice(indexRow,1);
+      }
+      this.setState({widgetConfig:widgetConfig,focusWidgets:"",contextMenu:JSON.parse(JSON.stringify(contextMenuDefault))});
+    },
+
+    setContextMenu : function(indexRow,indexCol,event){
+     var contextMenu=this.state.contextMenu;
+     if(contextMenu.indexRow===indexRow && contextMenu.indexCol===indexCol){
+       this.setState({contextMenu:JSON.parse(JSON.stringify(contextMenuDefault))});
+     }else{
+       contextMenu.indexRow=indexRow;
+       contextMenu.indexCol=indexCol;
+       contextMenu.check =true;
+       this.setState({contextMenu:contextMenu});
+     }
+
+    },
+
+    onCancelWidgets : function(){
+      var widgetConfig=this.state.widgetConfig;
+      widgetConfig.widgets=JSON.parse(JSON.stringify(this.state.backUpWidgets));
+      this.setState({
+        contextMenu:JSON.parse(JSON.stringify(contextMenuDefault)),
+        checkSameLine : false,
+        designSwitch:false,
+        isOpen: false,
+        finishFocusHighlights:false,
+        widgetConfig : widgetConfig
+      });
+    },
+
+    onDoneWidgets : function(){
+      this.setState({
+        contextMenu:JSON.parse(JSON.stringify(contextMenuDefault)),
+        checkSameLine : false,
+        designSwitch:false,
+        isOpen: false,
+        finishFocusHighlights:false,
+        backUpWidgets:[]
+      });
+    },
+
     render() {
       return (
         <div className="dashboard-page dashboard-new-layout">
           <div id="page-title">
-            <h1 className="page-header">Dashboard</h1>            
+            <h1 className="page-header">Dashboard</h1>
             <div className="dashTools">
-                <a href="#" className=""></a>
-                <a href="#"  className={(this.state.isOpen ? 'isActive' : '')} onClick={this.isOpenTool} ><i className="fa fa-plus"></i></a>
+              {! this.state.designSwitch && (
+                  <span>
+                    <a href="#" className="ic-modDrag" onClick={this.isDesignSwitch}><span>Edit layout</span></a>
+                    <a href="#"  className={(this.state.isOpen ? 'isActive' : '')} onClick={this.isOpenTool} ><i className="fa fa-plus"></i></a>
+                  </span>
+                )}
+                { (this.state.designSwitch) && (
+                  <span   className="switch-on">
+                    <a href="#" className="btn-default"  onClick={this.onCancelWidgets}>Cancle</a>
+                    <a href="#" className="btn-default btn-pink"  onClick={this.onDoneWidgets}>Done</a>
+                  </span>
+                )}
             </div>
           </div>
+          <div className="quick-action-tool">
+                <a href="#"><i className="fa fa-plus"></i> New story</a>
+                <a href="#"><i className="fa fa-plus"></i> Upload media</a>
+                <a href="#"><i className="fa fa-plus"></i> Add profile </a>
+            </div>
           {!(this.state.widgetConfig && this.state.widgetConfig.widgets && this.state.widgetConfig.widgets.length) &&
             <div className={'main-content '+ (this.state.isOpen ? 'isOpenTool' : '')}
               onDragOver={this.onDragOverWidget.bind(this,"addWidgets",null,null)}
@@ -395,14 +489,15 @@ var MainDnD = React.createClass({
             </div>
           }
           {(this.state.widgetConfig && this.state.widgetConfig.widgets && this.state.widgetConfig.widgets.length > 0) &&
-            <div className={ 'main-content ' + (this.state.isOpen ? 'isOpenTool' : '')}>
+            <div className={ 'main-content ' + (this.state.isOpen ? 'isOpenTool' : '')
+             + (this.state.designSwitch ? ' switch-on' : '') }>
               {
                 this.state.widgetConfig.widgets.map((row, indexRow) => {
                   return (
                     <div>
                       <div className="row" key={indexRow}>
                         { ( (row.length < limitRow)  || (this.state.checkSameLine && row.length <= limitRow) )&&
-                          <div className={"point-focus-begin"+ (this.state.focusWidgets===(indexRow+".0.before") ? ' choose ' : ' no-choose ')
+                          <div className={"point-focus point-focus-begin"+ (this.state.focusWidgets===(indexRow+".0.before") ? ' choose ' : ' no-choose ')
                               + (this.state.focusHighlights.list.indexOf(indexRow+"."+"0"+".before")>=0  ? ' highlight ' : '') }
                               key={indexRow+"."+"0"+".before"}
                               onDragLeave={this.onDragLeaveWidget.bind(this,indexRow+".0.before")}
@@ -432,15 +527,26 @@ var MainDnD = React.createClass({
                         {
                           row.map((widget, indexCol) => {
                             return (
-                                <div className={"col-md-"+widget.col} key={indexRow+"."+indexCol} draggable='true'
+                                <div className={"col-md-"+widget.col }
+                                  key={indexRow+"."+indexCol} draggable={this.state.designSwitch}
                                   onDragOver={this.onDragOverHighlights.bind(this,indexRow,indexCol)}
                                   onDragLeave={this.onDragLeaveHighlights.bind(this,indexRow,indexCol)}
                                   onDragStart={this.onDragChangeBeginWidget.bind(this,indexRow,indexCol)}
                                   onDragEnd={this.onDragEndWidget}>
-                                  <div className="widget">
+                                  <div className={"widget "}>
+                                    <a href="#" className="ic-remove" onClick={this.onRemoveWidget.bind(this,indexRow,indexCol)}><span>Remove widget</span></a>
                                     <div className="widget-heading clearfix">
-                                        <div className="widget-control">
-                                            <a href="#" className="icon-settings"><i className="fa fa-cog"></i></a>
+                                        <div className={"widget-control "+
+                                              (this.state.designSwitch ? " display_none" : " " )
+                                              }>
+                                              <div className="icon-settings">
+                                                <span><i className="fa fa-cog" onClick={this.setContextMenu.bind(this,indexRow,indexCol)} ></i></span>
+                                                <ul className={ "cbp-tm-submenu"
+                                                  + ((!this.state.designSwitch && this.state.contextMenu.check && this.state.contextMenu.indexRow === indexRow && this.state.contextMenu.indexCol === indexCol) ? " display_block " : " ") } >
+                                                  <li><a href="#" className="ic-edit">Edit <i className="fa fa-pencil"></i></a></li>
+                                                  <li><a href="#" className="ic-delete" onClick={this.onRemoveWidget.bind(this,indexRow,indexCol)}>Delete widget <i className="fa fa-trash"></i></a></li>
+                                                </ul>
+                                              </div>
                                         </div>
                                         <h2 className="widget-title">{widget.componentType}</h2>
                                     </div>
@@ -451,7 +557,7 @@ var MainDnD = React.createClass({
                           })
                         }
                         { ((row.length < limitRow) || (this.state.checkSameLine && row.length <= limitRow)) &&
-                          <div className={"point-focus-end"+(this.state.focusWidgets===(indexRow+"."+(row.length-1)+".after") ? ' choose ' : ' no-choose ')
+                          <div className={"point-focus point-focus-end"+(this.state.focusWidgets===(indexRow+"."+(row.length-1)+".after") ? ' choose ' : ' no-choose ')
                               + (this.state.focusHighlights.list.indexOf(indexRow+"."+(row.length-1)+".after")>=0  ? ' highlight ' : '') }
                               key={indexRow+"."+(row.length-1)+".after"}
                               onDragLeave={this.onDragLeaveWidget.bind(this,indexRow+"."+(row.length-1)+".after")}
@@ -474,7 +580,7 @@ var MainDnD = React.createClass({
             </div>
           }
 
-          <div className={ 'moduleCategories ' + (this.state.isOpen ? 'isOpenTool' : '')}>
+          <div className={ 'moduleCategories ' + (this.state.isOpen ? 'isOpenTool' : ' hidden')}>
             <div className="item-moduleCategorie">
               <h3>Quick view</h3>
               <div
@@ -527,4 +633,4 @@ var MainDnD = React.createClass({
     }
 });
 
-module.exports = DragDropContext(HTML5Backend)(MainDnD);
+module.exports = MainDnD;
