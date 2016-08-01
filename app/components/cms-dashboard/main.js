@@ -454,6 +454,7 @@ var MainDnD = React.createClass({
     },
 
     render() {
+      console.log(this.state.widgetConfig);
       return (
         <div className="dashboard-page dashboard-new-layout">
           <div id="page-title">
