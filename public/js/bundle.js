@@ -21448,7 +21448,7 @@
 	var widgetConfigDefault = {
 	  affiliateId: "0",
 	  widgets: [],
-	  user: "demo"
+	  userId: "userId"
 	};
 
 	var limitRow = 3;
@@ -21477,8 +21477,8 @@
 	      finishFocusHighlights: false,
 	      // check open add widget
 	      isOpen: false,
-	      // add componentType ( Add widget)
-	      componentType: "",
+	      // add widgetType ( Add widget)
+	      widgetType: "",
 	      // data widget config
 	      widgetConfig: JSON.parse(JSON.stringify(widgetConfigDefault)),
 	      // drag irem
@@ -21582,11 +21582,11 @@
 	  },
 
 	  // add Widget (ADD)
-	  onDragStartWidget: function onDragStartWidget(componentType, event) {
+	  onDragStartWidget: function onDragStartWidget(widgetType, event) {
 	    event.dataTransfer.effectAllowed = 'move';
 	    // setData() is necessary for starting the drag in firefox
 	    event.dataTransfer.setData('text', 'dummy');
-	    this.setState({ componentType: componentType, dragItem: JSON.parse(JSON.stringify(dragItemDefault)), checkSameLine: false });
+	    this.setState({ widgetType: widgetType, dragItem: JSON.parse(JSON.stringify(dragItemDefault)), checkSameLine: false });
 	  },
 
 	  // add Widget (ADD)
@@ -21601,7 +21601,7 @@
 	    dragItem["indexCol"] = indexCol;
 	    dragItem["data"] = JSON.parse(JSON.stringify(data));
 	    if (this.state.designSwitch) {
-	      this.setState({ componentType: "", dragItem: dragItem, focusHighlights: JSON.parse(JSON.stringify(focusHighlightDefault)) });
+	      this.setState({ widgetType: "", dragItem: dragItem, focusHighlights: JSON.parse(JSON.stringify(focusHighlightDefault)) });
 	    }
 	  },
 
@@ -21610,7 +21610,7 @@
 	    event.preventDefault();
 	    // Over when ADD
 	    var dragItem = this.state.dragItem;
-	    if (this.state.componentType) {
+	    if (this.state.widgetType) {
 	      if (this.state.focusWidgets || this.state.focusWidgets !== focusWidgets) {
 	        this.setState({ focusWidgets: focusWidgets, focusHighlights: JSON.parse(JSON.stringify(focusHighlightDefault)) });
 	      }
@@ -21628,7 +21628,7 @@
 	  // leave widget (ADD-CHANGE)
 	  onDragLeaveWidget: function onDragLeaveWidget(focusWidgets, event) {
 	    event.preventDefault();
-	    // if(this.state.componentType){
+	    // if(this.state.widgetType){
 	    if (this.state.focusWidgets === focusWidgets) {
 	      this.setState({ focusWidgets: "" });
 	    }
@@ -21638,18 +21638,18 @@
 	  // drag end widget (ADD)
 	  onDragEndWidget: function onDragEndWidget(event) {
 	    event.preventDefault();
-	    this.setState({ dragItem: JSON.parse(JSON.stringify(dragItemDefault)), componentType: "", focusHighlights: JSON.parse(JSON.stringify(focusHighlightDefault)) });
+	    this.setState({ dragItem: JSON.parse(JSON.stringify(dragItemDefault)), widgetType: "", focusHighlights: JSON.parse(JSON.stringify(focusHighlightDefault)) });
 	  },
 
 	  // drop end widget (ADD-CHANGE)
-	  onDropEndWidget: function onDropEndWidget(componentType, indexRow, indexCol, action, focusWidgets, event) {
+	  onDropEndWidget: function onDropEndWidget(widgetType, indexRow, indexCol, action, focusWidgets, event) {
 	    event.preventDefault();
 	    var widgetConfig = this.state.widgetConfig;
 	    var dragItem = this.state.dragItem;
-	    if (this.state.componentType) {
+	    if (this.state.widgetType) {
 	      var widgets = {
 	        "col": "12",
-	        "componentType": this.state.componentType,
+	        "widgetType": this.state.widgetType,
 	        "moduleItem": []
 	      };
 	      // add row
@@ -21671,7 +21671,7 @@
 	        }
 	        var numCol = 12 / rowWidgets.length;
 	        rowWidgets.map(function (item, index) {
-	          rowWidgets[index]["col"] = numCol;
+	          rowWidgets[index]["col"] = numCol + "";
 	        });
 	        widgetConfig.widgets[indexRow] = rowWidgets;
 	        this.setState({ widgetConfig: widgetConfig, focusWidgets: "", contextMenu: JSON.parse(JSON.stringify(contextMenuDefault)) });
@@ -21710,7 +21710,7 @@
 	            widgetConfig.widgets.map(function (rowWidgets, indexRow) {
 	              var numCol = 12 / rowWidgets.length;
 	              rowWidgets.map(function (widget, indexCol) {
-	                rowWidgets[indexCol]["col"] = numCol;
+	                rowWidgets[indexCol]["col"] = numCol + "";
 	              });
 	            });
 	            // move not one row
@@ -21758,7 +21758,7 @@
 	            widgetConfig.widgets.map(function (rowWidgets, indexRow) {
 	              var numCol = 12 / rowWidgets.length;
 	              rowWidgets.map(function (widget, indexCol) {
-	                rowWidgets[indexCol]["col"] = numCol;
+	                rowWidgets[indexCol]["col"] = numCol + "";
 	              });
 	            });
 	          }
@@ -21774,7 +21774,7 @@
 	    var focusHighlights = this.state.focusHighlights;
 	    var dragItem = this.state.dragItem;
 	    // Highlights (ADD)
-	    if (this.state.componentType) {
+	    if (this.state.widgetType) {
 	      if (focusHighlights.indexRow === indexRow && focusHighlights.indexCol === indexCol) {
 	        return;
 	      } else {
@@ -21813,7 +21813,7 @@
 	    event.preventDefault();
 	    var focusHighlights = this.state.focusHighlights;
 	    var dragItem = this.state.dragItem;
-	    // if(this.state.componentType ){
+	    // if(this.state.widgetType ){
 	    if (focusHighlights.indexRow === indexRow && focusHighlights.indexCol === indexCol) {
 	      this.setState({ focusHighlights: JSON.parse(JSON.stringify(focusHighlightDefault)), finishFocusHighlights: false });
 	    }
@@ -21829,7 +21829,7 @@
 	    rowWidgets.splice(indexCol, 1);
 	    var numCol = 12 / rowWidgets.length;
 	    rowWidgets.map(function (item, index) {
-	      rowWidgets[index]["col"] = numCol;
+	      rowWidgets[index]["col"] = numCol + "";
 	    });
 	    widgetConfig.widgets[indexRow] = rowWidgets;
 	    if (!rowWidgets || rowWidgets.length == 0) {
@@ -22058,7 +22058,7 @@
 	                      React.createElement(
 	                        "h2",
 	                        { className: "widget-title" },
-	                        widget.componentType
+	                        widget.widgetType
 	                      )
 	                    ),
 	                    React.createElement("div", { className: "widget-content" })
@@ -22093,7 +22093,7 @@
 	          React.createElement(
 	            "div",
 	            {
-	              className: this.state.componentType === "snapshots" ? "component choose" : "component no-choose", draggable: "true",
+	              className: this.state.widgetType === "snapshots" ? "component choose" : "component no-choose", draggable: "true",
 	              onDragStart: this.onDragStartWidget.bind(this, "snapshots"),
 	              onDragEnd: this.onDragEndWidget },
 	            "Snapshots"
@@ -22110,7 +22110,7 @@
 	          React.createElement(
 	            "div",
 	            {
-	              className: this.state.componentType === "mostPopular" ? "component choose" : "component no-choose", draggable: "true",
+	              className: this.state.widgetType === "mostPopular" ? "component choose" : "component no-choose", draggable: "true",
 	              onDragStart: this.onDragStartWidget.bind(this, "mostPopular"),
 	              onDragEnd: this.onDragEndWidget },
 	            "Most Popular"
@@ -22118,7 +22118,7 @@
 	          React.createElement(
 	            "div",
 	            {
-	              className: this.state.componentType === "editorList" ? "component choose" : "component no-choose", draggable: "true",
+	              className: this.state.widgetType === "editorList" ? "component choose" : "component no-choose", draggable: "true",
 	              onDragStart: this.onDragStartWidget.bind(this, "editorList"),
 	              onDragEnd: this.onDragEndWidget
 	            },
@@ -22136,7 +22136,7 @@
 	          React.createElement(
 	            "div",
 	            {
-	              className: this.state.componentType === "googleAnalytics" ? "component choose" : "component no-choose", draggable: "true",
+	              className: this.state.widgetType === "googleAnalytics" ? "component choose" : "component no-choose", draggable: "true",
 	              onDragStart: this.onDragStartWidget.bind(this, "googleAnalytics"),
 	              onDragEnd: this.onDragEndWidget
 	            },
@@ -22145,7 +22145,7 @@
 	          React.createElement(
 	            "div",
 	            {
-	              className: this.state.componentType === "chartbeat" ? "component choose" : "component no-choose", draggable: "true",
+	              className: this.state.widgetType === "chartbeat" ? "component choose" : "component no-choose", draggable: "true",
 	              onDragStart: this.onDragStartWidget.bind(this, "chartbeat"),
 	              onDragEnd: this.onDragEndWidget
 	            },
@@ -22154,7 +22154,7 @@
 	          React.createElement(
 	            "div",
 	            {
-	              className: this.state.componentType === "sharablee" ? "component choose" : "component no-choose", draggable: "true",
+	              className: this.state.widgetType === "sharablee" ? "component choose" : "component no-choose", draggable: "true",
 	              onDragStart: this.onDragStartWidget.bind(this, "sharablee"),
 	              onDragEnd: this.onDragEndWidget
 	            },
@@ -22172,7 +22172,7 @@
 	          React.createElement(
 	            "div",
 	            {
-	              className: this.state.componentType === "weatherOverview" ? "component choose" : "component no-choose", draggable: "true",
+	              className: this.state.widgetType === "weatherOverview" ? "component choose" : "component no-choose", draggable: "true",
 	              onDragStart: this.onDragStartWidget.bind(this, "weatherOverview"),
 	              onDragEnd: this.onDragEndWidget
 	            },

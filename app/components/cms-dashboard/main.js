@@ -43,8 +43,8 @@ var MainDnD = React.createClass({
           finishFocusHighlights:false,
           // check open add widget
           isOpen: false,
-          // add componentType ( Add widget)
-          componentType : "",
+          // add widgetType ( Add widget)
+          widgetType : "",
           // data widget config
           widgetConfig : JSON.parse(JSON.stringify(widgetConfigDefault)),
           // drag irem
@@ -157,11 +157,11 @@ var MainDnD = React.createClass({
     },
 
     // add Widget (ADD)
-    onDragStartWidget: function(componentType,event){
+    onDragStartWidget: function(widgetType,event){
       event.dataTransfer.effectAllowed = 'move';
       // setData() is necessary for starting the drag in firefox
       event.dataTransfer.setData('text', 'dummy');
-      this.setState({componentType:componentType,dragItem:JSON.parse(JSON.stringify(dragItemDefault)),checkSameLine:false});
+      this.setState({widgetType:widgetType,dragItem:JSON.parse(JSON.stringify(dragItemDefault)),checkSameLine:false});
 
     },
 
@@ -177,7 +177,7 @@ var MainDnD = React.createClass({
       dragItem["indexCol"]=indexCol;
       dragItem["data"]=JSON.parse(JSON.stringify(data));
       if(this.state.designSwitch){
-        this.setState({componentType:"",dragItem:dragItem,focusHighlights:JSON.parse(JSON.stringify(focusHighlightDefault))});
+        this.setState({widgetType:"",dragItem:dragItem,focusHighlights:JSON.parse(JSON.stringify(focusHighlightDefault))});
       }
     },
 
@@ -186,7 +186,7 @@ var MainDnD = React.createClass({
       event.preventDefault();
       // Over when ADD
       var dragItem=this.state.dragItem;
-      if(this.state.componentType){
+      if(this.state.widgetType){
         if(this.state.focusWidgets || this.state.focusWidgets!==focusWidgets ){
           this.setState({focusWidgets:focusWidgets,focusHighlights:JSON.parse(JSON.stringify(focusHighlightDefault))});
         }
@@ -204,7 +204,7 @@ var MainDnD = React.createClass({
     // leave widget (ADD-CHANGE)
     onDragLeaveWidget: function(focusWidgets,event){
       event.preventDefault();
-      // if(this.state.componentType){
+      // if(this.state.widgetType){
         if(this.state.focusWidgets===focusWidgets ){
           this.setState({focusWidgets:""});
         }
@@ -214,19 +214,19 @@ var MainDnD = React.createClass({
     // drag end widget (ADD)
     onDragEndWidget : function(event){
       event.preventDefault();
-      this.setState({dragItem : JSON.parse(JSON.stringify(dragItemDefault)),componentType:"",focusHighlights:JSON.parse(JSON.stringify(focusHighlightDefault))});
+      this.setState({dragItem : JSON.parse(JSON.stringify(dragItemDefault)),widgetType:"",focusHighlights:JSON.parse(JSON.stringify(focusHighlightDefault))});
     },
 
     // drop end widget (ADD-CHANGE)
-    onDropEndWidget : function(componentType,indexRow,indexCol,action,focusWidgets,event){
+    onDropEndWidget : function(widgetType,indexRow,indexCol,action,focusWidgets,event){
       event.preventDefault();
       var widgetConfig=this.state.widgetConfig;
       var dragItem=this.state.dragItem;
-      if(this.state.componentType){
+      if(this.state.widgetType){
         var widgets=
           {
               "col": "12",
-              "componentType": this.state.componentType,
+              "widgetType": this.state.widgetType,
               "moduleItem": []
           }
         ;
@@ -353,7 +353,7 @@ var MainDnD = React.createClass({
       var focusHighlights=this.state.focusHighlights;
       var dragItem=this.state.dragItem;
       // Highlights (ADD)
-      if(this.state.componentType){
+      if(this.state.widgetType){
         if(focusHighlights.indexRow===indexRow && focusHighlights.indexCol===indexCol){
           return;
         }else{
@@ -392,7 +392,7 @@ var MainDnD = React.createClass({
       event.preventDefault();
       var focusHighlights=this.state.focusHighlights;
       var dragItem=this.state.dragItem;
-      // if(this.state.componentType ){
+      // if(this.state.widgetType ){
       if(focusHighlights.indexRow===indexRow && focusHighlights.indexCol===indexCol){
         this.setState({focusHighlights:JSON.parse(JSON.stringify(focusHighlightDefault)),finishFocusHighlights:false});
       }
@@ -549,7 +549,7 @@ var MainDnD = React.createClass({
                                                 </ul>
                                               </div>
                                         </div>
-                                        <h2 className="widget-title">{widget.componentType}</h2>
+                                        <h2 className="widget-title">{widget.widgetType}</h2>
                                     </div>
                                     <div className="widget-content"></div>
                                   </div>
@@ -585,19 +585,19 @@ var MainDnD = React.createClass({
             <div className="item-moduleCategorie">
               <h3>Quick view</h3>
               <div
-                className={this.state.componentType==="snapshots" ? "component choose" : "component no-choose" }  draggable='true'
+                className={this.state.widgetType==="snapshots" ? "component choose" : "component no-choose" }  draggable='true'
                 onDragStart={this.onDragStartWidget.bind(this,"snapshots")}
                 onDragEnd={this.onDragEndWidget}>Snapshots</div>
             </div>
             <div className="item-moduleCategorie">
               <h3>Producer Tools</h3>
               <div
-                className={this.state.componentType==="mostPopular" ? "component choose" : "component no-choose" }  draggable='true'
+                className={this.state.widgetType==="mostPopular" ? "component choose" : "component no-choose" }  draggable='true'
                 onDragStart={this.onDragStartWidget.bind(this,"mostPopular")}
                 onDragEnd={this.onDragEndWidget}>
               Most Popular</div>
               <div
-                className={this.state.componentType==="editorList" ? "component choose" : "component no-choose" }  draggable='true'
+                className={this.state.widgetType==="editorList" ? "component choose" : "component no-choose" }  draggable='true'
                 onDragStart={this.onDragStartWidget.bind(this,"editorList")}
                 onDragEnd={this.onDragEndWidget}
               >Editor List</div>
@@ -605,17 +605,17 @@ var MainDnD = React.createClass({
             <div className="item-moduleCategorie">
               <h3>Analytics</h3>
               <div
-                className={this.state.componentType==="googleAnalytics" ? "component choose" : "component no-choose" }  draggable='true'
+                className={this.state.widgetType==="googleAnalytics" ? "component choose" : "component no-choose" }  draggable='true'
                 onDragStart={this.onDragStartWidget.bind(this,"googleAnalytics")}
                 onDragEnd={this.onDragEndWidget}
               >Google analytics</div>
               <div
-                className={this.state.componentType==="chartbeat" ? "component choose" : "component no-choose" }  draggable='true'
+                className={this.state.widgetType==="chartbeat" ? "component choose" : "component no-choose" }  draggable='true'
                 onDragStart={this.onDragStartWidget.bind(this,"chartbeat")}
                 onDragEnd={this.onDragEndWidget}
               >Chartbeat</div>
               <div
-                className={this.state.componentType==="sharablee" ? "component choose" : "component no-choose" }  draggable='true'
+                className={this.state.widgetType==="sharablee" ? "component choose" : "component no-choose" }  draggable='true'
                 onDragStart={this.onDragStartWidget.bind(this,"sharablee")}
                 onDragEnd={this.onDragEndWidget}
               >sharablee</div>
@@ -623,7 +623,7 @@ var MainDnD = React.createClass({
             <div className="item-moduleCategorie">
               <h3>Weather</h3>
               <div
-                className={this.state.componentType==="weatherOverview" ? "component choose" : "component no-choose" }  draggable='true'
+                className={this.state.widgetType==="weatherOverview" ? "component choose" : "component no-choose" }  draggable='true'
                 onDragStart={this.onDragStartWidget.bind(this,"weatherOverview")}
                 onDragEnd={this.onDragEndWidget}
               >Weather Overview</div>
