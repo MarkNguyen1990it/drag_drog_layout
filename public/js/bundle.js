@@ -21766,6 +21766,7 @@
 	        }
 	      }
 	    }
+	    console.log(JSON.stringify(this.state.widgetConfig, null, 2));
 	  },
 	  // set Highlight draggable area
 	  onDragOverHighlights: function onDragOverHighlights(indexRow, indexCol, event) {

@@ -13,7 +13,7 @@ var widgetConfigDefault={
     widgets: [
 
     ],
-    user : "demo"
+    userId : "userId"
 };
 
 var limitRow=3;
@@ -249,7 +249,7 @@ var MainDnD = React.createClass({
           }
           var numCol=12/(rowWidgets.length);
           rowWidgets.map(function(item,index){
-            rowWidgets[index]["col"]=numCol;
+            rowWidgets[index]["col"]=numCol+"";
           });
           widgetConfig.widgets[indexRow]=rowWidgets;
           this.setState({widgetConfig:widgetConfig,focusWidgets:"",contextMenu:JSON.parse(JSON.stringify(contextMenuDefault))});
@@ -288,7 +288,7 @@ var MainDnD = React.createClass({
               widgetConfig.widgets.map(function(rowWidgets, indexRow){
                  var numCol=12/(rowWidgets.length);
                  rowWidgets.map(function(widget, indexCol){
-                   rowWidgets[indexCol]["col"]=numCol;
+                   rowWidgets[indexCol]["col"]=numCol+"";
                  });
               });
             // move not one row
@@ -337,7 +337,7 @@ var MainDnD = React.createClass({
               widgetConfig.widgets.map(function(rowWidgets, indexRow){
                  var numCol=12/(rowWidgets.length);
                  rowWidgets.map(function(widget, indexCol){
-                   rowWidgets[indexCol]["col"]=numCol;
+                   rowWidgets[indexCol]["col"]=numCol+"";
                  });
               });
             }
@@ -345,6 +345,7 @@ var MainDnD = React.createClass({
           }
         }
       }
+      console.log(JSON.stringify(this.state.widgetConfig,null,2));
     },
     // set Highlight draggable area
     onDragOverHighlights:function(indexRow,indexCol,event){
@@ -407,7 +408,7 @@ var MainDnD = React.createClass({
       rowWidgets.splice(indexCol,1);
       var numCol=12/(rowWidgets.length);
       rowWidgets.map(function(item,index){
-        rowWidgets[index]["col"]=numCol;
+        rowWidgets[index]["col"]=numCol+"";
       });
       widgetConfig.widgets[indexRow]=rowWidgets;
       if(!rowWidgets || rowWidgets.length==0){
@@ -454,7 +455,6 @@ var MainDnD = React.createClass({
     },
 
     render() {
-      console.log(this.state.widgetConfig);
       return (
         <div className="dashboard-page dashboard-new-layout">
           <div id="page-title">
