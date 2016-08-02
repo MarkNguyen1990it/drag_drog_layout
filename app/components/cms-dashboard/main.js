@@ -1,4 +1,5 @@
 var React = require('react');
+var _= require('lodash');
 
 
 
@@ -53,12 +54,30 @@ var MainDnD = React.createClass({
           checkSameLine : false,
           designSwitch:false,
           contextMenu :  JSON.parse(JSON.stringify(contextMenuDefault)),
-          backUpWidgets : []
+          backUpWidgets : [],
+          // list widgetTypes added
+          widgetTypeAdded : {}
         };
     },
 
     componentWillMount: function(){
 
+    },
+
+    setWidgetTypeAdded : function(widgetConfig){
+      var widgetTypeAdded=this.state.widgetTypeAdded;
+      if(widgetTypeAdded){
+        Object.keys(widgetTypeAdded).map(function(key){
+          widgetTypeAdded[key]=false;
+        });
+      }
+      widgetConfig.widgets.map(function(rowWidgets, indexRow){
+         var numCol=12/(rowWidgets.length);
+         rowWidgets.map(function(widget, indexCol){
+           widgetTypeAdded[widget.widgetType]=true;
+         });
+      });
+      return widgetTypeAdded;
     },
 
     isOpenTool: function(e) {
@@ -238,7 +257,6 @@ var MainDnD = React.createClass({
             var index=indexRow+1;
             widgetConfig.widgets.splice(index, 0, [widgets]);
           }
-          this.setState({widgetConfig:widgetConfig,focusWidgets:""});
         // add col & row
         }else{
           var rowWidgets=JSON.parse(JSON.stringify(widgetConfig.widgets[indexRow]));
@@ -252,8 +270,9 @@ var MainDnD = React.createClass({
             rowWidgets[index]["col"]=numCol+"";
           });
           widgetConfig.widgets[indexRow]=rowWidgets;
-          this.setState({widgetConfig:widgetConfig,focusWidgets:"",contextMenu:JSON.parse(JSON.stringify(contextMenuDefault))});
         }
+        var widgetTypeAdded=this.setWidgetTypeAdded(widgetConfig);
+        this.setState({widgetConfig:widgetConfig,focusWidgets:"",contextMenu:JSON.parse(JSON.stringify(contextMenuDefault)),widgetTypeAdded:widgetTypeAdded});
       }else if(dragItem && this.checkNumber(dragItem.indexRow)){
         var focusHighlights=this.calChangeHighlights(dragItem,indexRow,indexCol);
         if(focusHighlights.list && focusHighlights.list.length > 0){
@@ -341,11 +360,11 @@ var MainDnD = React.createClass({
                  });
               });
             }
-            this.setState({widgetConfig:widgetConfig,focusWidgets:"",contextMenu:JSON.parse(JSON.stringify(contextMenuDefault))});
+            var widgetTypeAdded=this.setWidgetTypeAdded(widgetConfig);
+            this.setState({widgetConfig:widgetConfig,focusWidgets:"",contextMenu:JSON.parse(JSON.stringify(contextMenuDefault)),widgetTypeAdded:widgetTypeAdded});
           }
         }
       }
-      console.log(JSON.stringify(this.state.widgetConfig,null,2));
     },
     // set Highlight draggable area
     onDragOverHighlights:function(indexRow,indexCol,event){
@@ -414,7 +433,8 @@ var MainDnD = React.createClass({
       if(!rowWidgets || rowWidgets.length==0){
         widgetConfig.widgets.splice(indexRow,1);
       }
-      this.setState({widgetConfig:widgetConfig,focusWidgets:"",contextMenu:JSON.parse(JSON.stringify(contextMenuDefault))});
+      var widgetTypeAdded=this.setWidgetTypeAdded(widgetConfig);
+      this.setState({widgetConfig:widgetConfig,focusWidgets:"",contextMenu:JSON.parse(JSON.stringify(contextMenuDefault)),widgetTypeAdded:widgetTypeAdded});
     },
 
     setContextMenu : function(indexRow,indexCol,event){
@@ -433,13 +453,15 @@ var MainDnD = React.createClass({
     onCancelWidgets : function(){
       var widgetConfig=this.state.widgetConfig;
       widgetConfig.widgets=JSON.parse(JSON.stringify(this.state.backUpWidgets));
+      var widgetTypeAdded=this.setWidgetTypeAdded(widgetConfig);
       this.setState({
         contextMenu:JSON.parse(JSON.stringify(contextMenuDefault)),
         checkSameLine : false,
         designSwitch:false,
         isOpen: false,
         finishFocusHighlights:false,
-        widgetConfig : widgetConfig
+        widgetConfig : widgetConfig,
+        widgetTypeAdded:widgetTypeAdded
       });
     },
 
@@ -585,19 +607,22 @@ var MainDnD = React.createClass({
             <div className="item-moduleCategorie">
               <h3>Quick view</h3>
               <div
-                className={this.state.widgetType==="snapshots" ? "component choose" : "component no-choose" }  draggable='true'
+                className={this.state.widgetType==="snapshots" ? "component choose" : "component no-choose"
+                + (this.state.widgetTypeAdded["snapshots"] ? " hidden" : " " ) }  draggable='true'
                 onDragStart={this.onDragStartWidget.bind(this,"snapshots")}
                 onDragEnd={this.onDragEndWidget}>Snapshots</div>
             </div>
             <div className="item-moduleCategorie">
               <h3>Producer Tools</h3>
               <div
-                className={this.state.widgetType==="mostPopular" ? "component choose" : "component no-choose" }  draggable='true'
+                className={this.state.widgetType==="mostPopular" ? "component choose" : "component no-choose"
+                + (this.state.widgetTypeAdded["mostPopular"] ? " hidden" : " " )}  draggable='true'
                 onDragStart={this.onDragStartWidget.bind(this,"mostPopular")}
                 onDragEnd={this.onDragEndWidget}>
               Most Popular</div>
               <div
-                className={this.state.widgetType==="editorList" ? "component choose" : "component no-choose" }  draggable='true'
+                className={this.state.widgetType==="editorList" ? "component choose" : "component no-choose"
+                + (this.state.widgetTypeAdded["editorList"] ? " hidden" : " " ) }  draggable='true'
                 onDragStart={this.onDragStartWidget.bind(this,"editorList")}
                 onDragEnd={this.onDragEndWidget}
               >Editor List</div>
@@ -605,17 +630,20 @@ var MainDnD = React.createClass({
             <div className="item-moduleCategorie">
               <h3>Analytics</h3>
               <div
-                className={this.state.widgetType==="googleAnalytics" ? "component choose" : "component no-choose" }  draggable='true'
+                className={this.state.widgetType==="googleAnalytics" ? "component choose" : "component no-choose"
+                + (this.state.widgetTypeAdded["googleAnalytics"] ? " hidden" : " " )}  draggable='true'
                 onDragStart={this.onDragStartWidget.bind(this,"googleAnalytics")}
                 onDragEnd={this.onDragEndWidget}
               >Google analytics</div>
               <div
-                className={this.state.widgetType==="chartbeat" ? "component choose" : "component no-choose" }  draggable='true'
+                className={this.state.widgetType==="chartbeat" ? "component choose" : "component no-choose"
+                + (this.state.widgetTypeAdded["chartbeat"] ? " hidden" : " " )}  draggable='true'
                 onDragStart={this.onDragStartWidget.bind(this,"chartbeat")}
                 onDragEnd={this.onDragEndWidget}
               >Chartbeat</div>
               <div
-                className={this.state.widgetType==="sharablee" ? "component choose" : "component no-choose" }  draggable='true'
+                className={this.state.widgetType==="sharablee" ? "component choose" : "component no-choose"
+                + (this.state.widgetTypeAdded["sharablee"] ? " hidden" : " " )}  draggable='true'
                 onDragStart={this.onDragStartWidget.bind(this,"sharablee")}
                 onDragEnd={this.onDragEndWidget}
               >sharablee</div>
@@ -623,7 +651,8 @@ var MainDnD = React.createClass({
             <div className="item-moduleCategorie">
               <h3>Weather</h3>
               <div
-                className={this.state.widgetType==="weatherOverview" ? "component choose" : "component no-choose" }  draggable='true'
+                className={this.state.widgetType==="weatherOverview" ? "component choose" : "component no-choose"
+                + (this.state.widgetTypeAdded["weatherOverview"] ? " hidden" : " " )}  draggable='true'
                 onDragStart={this.onDragStartWidget.bind(this,"weatherOverview")}
                 onDragEnd={this.onDragEndWidget}
               >Weather Overview</div>
