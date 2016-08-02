@@ -22020,7 +22020,7 @@
 	                      { className: "widget-heading clearfix" },
 	                      React.createElement(
 	                        "div",
-	                        { className: "widget-control " + (_this.state.designSwitch ? " display_none" : " ") },
+	                        { className: "widget-control " + (_this.state.designSwitch ? " hidden" : " ") },
 	                        React.createElement(
 	                          "div",
 	                          { className: "icon-settings" },
@@ -22031,7 +22031,7 @@
 	                          ),
 	                          React.createElement(
 	                            "ul",
-	                            { className: "cbp-tm-submenu" + (!_this.state.designSwitch && _this.state.contextMenu.check && _this.state.contextMenu.indexRow === indexRow && _this.state.contextMenu.indexCol === indexCol ? " display_block " : " ") },
+	                            { className: "cbp-tm-submenu" + (!_this.state.designSwitch && _this.state.contextMenu.check && _this.state.contextMenu.indexRow === indexRow && _this.state.contextMenu.indexCol === indexCol ? " visible " : " ") },
 	                            React.createElement(
 	                              "li",
 	                              null,

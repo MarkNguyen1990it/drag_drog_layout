@@ -1,12 +1,8 @@
 .hidden {
   display: none;
 }
-.display_block {
+.visible {
   display: block;
-}
-
-.display_none {
-  display: none;
 }
 
 .main-content.isOpenTool.switch-on .moduleCategories.isOpenTool

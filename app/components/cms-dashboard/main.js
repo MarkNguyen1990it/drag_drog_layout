@@ -538,12 +538,12 @@ var MainDnD = React.createClass({
                                     <a href="#" className="ic-remove" onClick={this.onRemoveWidget.bind(this,indexRow,indexCol)}><span>Remove widget</span></a>
                                     <div className="widget-heading clearfix">
                                         <div className={"widget-control "+
-                                              (this.state.designSwitch ? " display_none" : " " )
+                                              (this.state.designSwitch ? " hidden" : " " )
                                               }>
                                               <div className="icon-settings">
                                                 <span><i className="fa fa-cog" onClick={this.setContextMenu.bind(this,indexRow,indexCol)} ></i></span>
                                                 <ul className={ "cbp-tm-submenu"
-                                                  + ((!this.state.designSwitch && this.state.contextMenu.check && this.state.contextMenu.indexRow === indexRow && this.state.contextMenu.indexCol === indexCol) ? " display_block " : " ") } >
+                                                  + ((!this.state.designSwitch && this.state.contextMenu.check && this.state.contextMenu.indexRow === indexRow && this.state.contextMenu.indexCol === indexCol) ? " visible " : " ") } >
                                                   <li><a href="#" className="ic-edit">Edit <i className="fa fa-pencil"></i></a></li>
                                                   <li><a href="#" className="ic-delete" onClick={this.onRemoveWidget.bind(this,indexRow,indexCol)}>Delete widget <i className="fa fa-trash"></i></a></li>
                                                 </ul>
