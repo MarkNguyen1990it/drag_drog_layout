@@ -14,3 +14,20 @@ body
 {
   overflow-x: hidden;
 }
+
+.ondrag .widget {
+  border:2px dashed #ccc;
+
+}
+
+.ondrag .widget {
+  opacity: 0
+}
+.ondrag::before{
+  position: absolute;
+  content: '';
+  width: calc(100% - 30px);
+  height: calc(100% - 4px);
+  border:2px dashed #ccc;
+
+}

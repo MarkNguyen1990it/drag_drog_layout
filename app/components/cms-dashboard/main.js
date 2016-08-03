@@ -187,8 +187,19 @@ var MainDnD = React.createClass({
     // add Widget (ADD)
     onDragChangeBeginWidget: function(indexRow,indexCol,event){
       event.dataTransfer.effectAllowed = 'move';
+
+
+
       // setData() is necessary for starting the drag in firefox
       event.dataTransfer.setData('text', 'dummy');
+
+      var div = event.target.cloneNode(true);
+      document.getElementsByClassName("main-content-hidden")[0].appendChild(div);
+      event.dataTransfer.setDragImage(div, 0, 0);
+      if(event.target.className){
+        event.target.className =event.target.className.trim()+" ondrag";
+      }
+
       var widgetConfig=this.state.widgetConfig;
       var dragItem={};
       var data = widgetConfig.widgets[indexRow][indexCol];
@@ -233,12 +244,18 @@ var MainDnD = React.createClass({
     // drag end widget (ADD)
     onDragEndWidget : function(event){
       event.preventDefault();
+      event.target.className =event.target.className.replace("ondrag"," ");
+      var myNode = document.getElementsByClassName("main-content-hidden")[0];
+      while (myNode.firstChild) {
+          myNode.removeChild(myNode.firstChild);
+      }
       this.setState({dragItem : JSON.parse(JSON.stringify(dragItemDefault)),widgetType:"",focusHighlights:JSON.parse(JSON.stringify(focusHighlightDefault))});
     },
 
     // drop end widget (ADD-CHANGE)
     onDropEndWidget : function(widgetType,indexRow,indexCol,action,focusWidgets,event){
       event.preventDefault();
+      event.target.className =event.target.className.replace("ondrag"," ");
       var widgetConfig=this.state.widgetConfig;
       var dragItem=this.state.dragItem;
       if(this.state.widgetType){
@@ -657,6 +674,8 @@ var MainDnD = React.createClass({
                 onDragEnd={this.onDragEndWidget}
               >Weather Overview</div>
             </div>
+          </div>
+          <div className="main-content main-content-hidden" style={{'left': '-999999px', 'position':'relative'}}>
           </div>
       </div>
       );
