@@ -3,13 +3,13 @@ var webpack = require('webpack');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 let extractCSS = new ExtractTextPlugin('stylesheets/aaaa.css');
 
-module.exports = {
+var webpackConfig = {
     entry: {
         app: "./app/app.js"
     },
     output: {
         path: path.join(__dirname, "/public/js/"),
-        filename: "[name].js"
+        filename: "app.js"
     },
     module: {
         loaders: [
@@ -31,7 +31,14 @@ module.exports = {
       ]
     },
     plugins: [
-        new ExtractTextPlugin('[name].css'),
-    ]
+        new webpack.HotModuleReplacementPlugin(),
+        new ExtractTextPlugin('[name].css')
+    ]   
+
+
 
 };
+
+
+
+module.exports = webpackConfig;

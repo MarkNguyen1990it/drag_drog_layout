@@ -186,6 +186,7 @@ var MainDnD = React.createClass({
 
     // add Widget (ADD)
     onDragChangeBeginWidget: function(indexRow,indexCol,event){
+      if(this.state.designSwitch){
       event.dataTransfer.effectAllowed = 'move';
 
 
@@ -193,12 +194,10 @@ var MainDnD = React.createClass({
       // setData() is necessary for starting the drag in firefox
       event.dataTransfer.setData('text', 'dummy');
 
-      var div = event.target.cloneNode(true);
+      var div = document.getElementsByClassName("_"+indexRow+"_"+indexCol+"_div_")[0].cloneNode(true);
       document.getElementsByClassName("main-content-hidden")[0].appendChild(div);
       event.dataTransfer.setDragImage(div, 0, 0);
-      if(event.target.className){
-        event.target.className =event.target.className.trim()+" ondrag";
-      }
+
 
       var widgetConfig=this.state.widgetConfig;
       var dragItem={};
@@ -206,7 +205,7 @@ var MainDnD = React.createClass({
       dragItem["indexRow"]=indexRow;
       dragItem["indexCol"]=indexCol;
       dragItem["data"]=JSON.parse(JSON.stringify(data));
-      if(this.state.designSwitch){
+
         this.setState({widgetType:"",dragItem:dragItem,focusHighlights:JSON.parse(JSON.stringify(focusHighlightDefault))});
       }
     },
@@ -244,7 +243,9 @@ var MainDnD = React.createClass({
     // drag end widget (ADD)
     onDragEndWidget : function(event){
       event.preventDefault();
-      event.target.className =event.target.className.replace("ondrag"," ");
+
+
+
       var myNode = document.getElementsByClassName("main-content-hidden")[0];
       while (myNode.firstChild) {
           myNode.removeChild(myNode.firstChild);
@@ -255,7 +256,9 @@ var MainDnD = React.createClass({
     // drop end widget (ADD-CHANGE)
     onDropEndWidget : function(widgetType,indexRow,indexCol,action,focusWidgets,event){
       event.preventDefault();
-      event.target.className =event.target.className.replace("ondrag"," ");
+
+
+
       var widgetConfig=this.state.widgetConfig;
       var dragItem=this.state.dragItem;
       if(this.state.widgetType){
@@ -514,7 +517,7 @@ var MainDnD = React.createClass({
             </div>
           </div>
           <div className="quick-action-tool">
-                <a href="#"><i className="fa fa-plus"></i> New story</a>
+                <a href="#"><i className="fa fa-plus"></i> New story 1212aa</a>
                 <a href="#"><i className="fa fa-plus"></i> Upload media</a>
                 <a href="#"><i className="fa fa-plus"></i> Add profile </a>
             </div>
@@ -567,7 +570,8 @@ var MainDnD = React.createClass({
                         {
                           row.map((widget, indexCol) => {
                             return (
-                                <div className={"col-md-"+widget.col }
+                                <div className={"col-md-"+widget.col + "  "+"_"+indexRow+"_"+indexCol+"_div_  "+
+                                   (this.state.dragItem && this.state.dragItem.indexRow === indexRow && this.state.dragItem.indexCol === indexCol ? " ondrag " : "")}
                                   key={indexRow+"."+indexCol} draggable={this.state.designSwitch}
                                   onDragOver={this.onDragOverHighlights.bind(this,indexRow,indexCol)}
                                   onDragLeave={this.onDragLeaveHighlights.bind(this,indexRow,indexCol)}
@@ -590,7 +594,8 @@ var MainDnD = React.createClass({
                                         </div>
                                         <h2 className="widget-title">{widget.widgetType}</h2>
                                     </div>
-                                    <div className="widget-content"></div>
+                                    <div className="widget-content">
+                                    </div>
                                   </div>
                                 </div>
                             );

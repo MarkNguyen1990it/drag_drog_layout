@@ -1,3 +1,12 @@
+body
+{
+  overflow-x: hidden;
+}
+
+.ondrag .widget {
+  border:2px dashed #ccc;
+
+}
 .hidden {
   display: none;
 }
@@ -10,16 +19,6 @@
   display: none;
 }
 
-body
-{
-  overflow-x: hidden;
-}
-
-.ondrag .widget {
-  border:2px dashed #ccc;
-
-}
-
 .ondrag .widget {
   opacity: 0
 }
@@ -27,7 +26,9 @@ body
   position: absolute;
   content: '';
   width: calc(100% - 30px);
-  height: calc(100% - 4px);
-  border:2px dashed #ccc;
+  height: 100%;
+  outline: 2px dashed #ccc;
+  background: #dcedf6;
+  outline-offset: -4px;
 
 }

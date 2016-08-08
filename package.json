@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "main": "index.js",
   "scripts": {
-    "start": "webpack && node server.js"
+    "start": "webpack && node server.js",
+    "dev-start": "webpack-dev-server --hot --inline && node server.js"
   },
   "dependencies": {
     "express": "^4.14.0",
@@ -16,7 +17,8 @@
     "react-dnd-html5-backend": "^2.1.2",
     "react-dom": "^15.1.0",
     "react-link-state": "^0.1.2",
-    "webpack": "^1.13.1"
+    "webpack": "^1.13.1",
+    "webpack-dev-server": "1.11.0"
   },
   "devDependencies": {
     "babel-core": "^6.9.1",
@@ -25,6 +27,7 @@
     "babel-preset-react": "^6.5.0",
     "node-sass": "^3.4.2",
     "sass-loader": "^4.0.0",
-    "webpack": "^1.13.1"
+    "webpack": "^1.13.1",
+    "webpack-dev-server": "1.11.0"
   }
 }
