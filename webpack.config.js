@@ -33,7 +33,7 @@ var webpackConfig = {
     plugins: [
         new webpack.HotModuleReplacementPlugin(),
         new ExtractTextPlugin('[name].css')
-    ]   
+    ]
 
 
 
