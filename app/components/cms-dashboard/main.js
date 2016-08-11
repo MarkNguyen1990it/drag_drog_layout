@@ -1,5 +1,8 @@
 var React = require('react');
 var _= require('lodash');
+var AddWidget = require('./addwidget');
+var DragDropContext = require('react-dnd').DragDropContext;
+var HTML5Backend = require('react-dnd-html5-backend');
 
 
 
@@ -177,9 +180,11 @@ var MainDnD = React.createClass({
 
     // add Widget (ADD)
     onDragStartWidget: function(widgetType,event){
-      event.dataTransfer.effectAllowed = 'move';
-      // setData() is necessary for starting the drag in firefox
-      event.dataTransfer.setData('text', 'dummy');
+      if(event){
+        event.dataTransfer.effectAllowed = 'move';
+        // setData() is necessary for starting the drag in firefox
+        event.dataTransfer.setData('text', 'dummy');
+      }
       this.setState({widgetType:widgetType,dragItem:JSON.parse(JSON.stringify(dragItemDefault)),checkSameLine:false});
 
     },
@@ -242,8 +247,9 @@ var MainDnD = React.createClass({
 
     // drag end widget (ADD)
     onDragEndWidget : function(event){
-      event.preventDefault();
-
+      if(event){
+        event.preventDefault();
+      }
       this.setState({dragItem : JSON.parse(JSON.stringify(dragItemDefault)),widgetType:"",focusHighlights:JSON.parse(JSON.stringify(focusHighlightDefault))});
 
       var myNode = document.getElementsByClassName("main-content-hidden")[0];
@@ -255,8 +261,9 @@ var MainDnD = React.createClass({
 
     // drop end widget (ADD-CHANGE)
     onDropEndWidget : function(widgetType,indexRow,indexCol,action,focusWidgets,event){
-      event.preventDefault();
-
+      if(event){
+        event.preventDefault();
+      }
 
 
       var widgetConfig=this.state.widgetConfig;
@@ -634,25 +641,14 @@ var MainDnD = React.createClass({
               }
             </div>
           }
+          { this.state.isOpen &&
+            <AddWidget isOpen={this.state.isOpen }
+              onDragStartWidget={this.onDragStartWidget}
+              onDragEndWidget={this.onDragEndWidget}
+              widgetTypeAdded={this.state.widgetTypeAdded} widgetType={this.state.widgetType} >
+            </AddWidget>
+          }
 
-          <div className={ 'moduleCategories ' + (this.state.isOpen ? 'isOpenTool' : ' hidden')}>
-            <div className="item-moduleCategorie">
-              <h3>Group 1</h3>
-                {this.renderModule("component1.1","component1.1")}
-                {this.renderModule("component1.2","component1.2")}
-            </div>
-            <div className="item-moduleCategorie">
-              <h3>Group 2</h3>
-                {this.renderModule("component2.1","component2.1")}
-                {this.renderModule("component2.2","component2.2")}
-            </div>
-            <div className="item-moduleCategorie">
-              <h3>Group 3</h3>
-                {this.renderModule("component3.1","component3.1")}
-                {this.renderModule("component3.2","component3.2")}
-                {this.renderModule("component3.3","component3.3")}
-            </div>
-          </div>
           <div className="main-content main-content-hidden" style={{'left': '-999999px', 'position':'relative'}}>
           </div>
       </div>
@@ -660,4 +656,4 @@ var MainDnD = React.createClass({
     }
 });
 
-module.exports = MainDnD;
+module.exports = DragDropContext(HTML5Backend)(MainDnD);
