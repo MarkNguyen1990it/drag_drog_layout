@@ -17,7 +17,7 @@ var widgetConfigDefault={
     userId : "userId"
 };
 
-var limitRow=3;
+var limitRow=4;
 var dragItemDefault = {
   indexRow :"",
   indexCol :"",
@@ -244,13 +244,13 @@ var MainDnD = React.createClass({
     onDragEndWidget : function(event){
       event.preventDefault();
 
-
+      this.setState({dragItem : JSON.parse(JSON.stringify(dragItemDefault)),widgetType:"",focusHighlights:JSON.parse(JSON.stringify(focusHighlightDefault))});
 
       var myNode = document.getElementsByClassName("main-content-hidden")[0];
       while (myNode.firstChild) {
           myNode.removeChild(myNode.firstChild);
       }
-      this.setState({dragItem : JSON.parse(JSON.stringify(dragItemDefault)),widgetType:"",focusHighlights:JSON.parse(JSON.stringify(focusHighlightDefault))});
+
     },
 
     // drop end widget (ADD-CHANGE)
@@ -292,7 +292,7 @@ var MainDnD = React.createClass({
           widgetConfig.widgets[indexRow]=rowWidgets;
         }
         var widgetTypeAdded=this.setWidgetTypeAdded(widgetConfig);
-        this.setState({widgetConfig:widgetConfig,focusWidgets:"",contextMenu:JSON.parse(JSON.stringify(contextMenuDefault)),widgetTypeAdded:widgetTypeAdded});
+        this.setState({dragItem : JSON.parse(JSON.stringify(dragItemDefault)),widgetConfig:widgetConfig,focusWidgets:"",contextMenu:JSON.parse(JSON.stringify(contextMenuDefault)),widgetTypeAdded:widgetTypeAdded});
       }else if(dragItem && this.checkNumber(dragItem.indexRow)){
         var focusHighlights=this.calChangeHighlights(dragItem,indexRow,indexCol);
         if(focusHighlights.list && focusHighlights.list.length > 0){
@@ -381,7 +381,7 @@ var MainDnD = React.createClass({
               });
             }
             var widgetTypeAdded=this.setWidgetTypeAdded(widgetConfig);
-            this.setState({widgetConfig:widgetConfig,focusWidgets:"",contextMenu:JSON.parse(JSON.stringify(contextMenuDefault)),widgetTypeAdded:widgetTypeAdded});
+            this.setState({dragItem : JSON.parse(JSON.stringify(dragItemDefault)),widgetConfig:widgetConfig,focusWidgets:"",contextMenu:JSON.parse(JSON.stringify(contextMenuDefault)),widgetTypeAdded:widgetTypeAdded});
           }
         }
       }
@@ -496,11 +496,27 @@ var MainDnD = React.createClass({
       });
     },
 
+    renderModule : function(name,type){
+        // + (this.state.widgetTypeAdded[type] ? " hidden" : " " )
+      return (
+        <div
+          className={this.state.widgetType===type ? "component choose" : "component no-choose"}  draggable='true'
+          onDragStart={this.onDragStartWidget.bind(this,type)}
+          onDragEnd={this.onDragEndWidget}
+        >{name}</div>
+      );
+    },
+
     render() {
       return (
         <div className="dashboard-page dashboard-new-layout">
           <div id="page-title">
-            <h1 className="page-header">Dashboard</h1>
+            <h1 className="page-header">
+              Layout
+            </h1>
+            <h1 className="page-header">
+              Support drag & drog 4 component in one row
+            </h1>
             <div className="dashTools">
               {! this.state.designSwitch && (
                   <span>
@@ -516,11 +532,6 @@ var MainDnD = React.createClass({
                 )}
             </div>
           </div>
-          <div className="quick-action-tool">
-                <a href="#"><i className="fa fa-plus"></i> New story 1212aa</a>
-                <a href="#"><i className="fa fa-plus"></i> Upload media</a>
-                <a href="#"><i className="fa fa-plus"></i> Add profile </a>
-            </div>
           {!(this.state.widgetConfig && this.state.widgetConfig.widgets && this.state.widgetConfig.widgets.length) &&
             <div className={'main-content '+ (this.state.isOpen ? 'isOpenTool' : '')}
               onDragOver={this.onDragOverWidget.bind(this,"addWidgets",null,null)}
@@ -587,7 +598,6 @@ var MainDnD = React.createClass({
                                                 <span><i className="fa fa-cog" onClick={this.setContextMenu.bind(this,indexRow,indexCol)} ></i></span>
                                                 <ul className={ "cbp-tm-submenu"
                                                   + ((!this.state.designSwitch && this.state.contextMenu.check && this.state.contextMenu.indexRow === indexRow && this.state.contextMenu.indexCol === indexCol) ? " visible " : " ") } >
-                                                  <li><a href="#" className="ic-edit">Edit <i className="fa fa-pencil"></i></a></li>
                                                   <li><a href="#" className="ic-delete" onClick={this.onRemoveWidget.bind(this,indexRow,indexCol)}>Delete widget <i className="fa fa-trash"></i></a></li>
                                                 </ul>
                                               </div>
@@ -627,57 +637,20 @@ var MainDnD = React.createClass({
 
           <div className={ 'moduleCategories ' + (this.state.isOpen ? 'isOpenTool' : ' hidden')}>
             <div className="item-moduleCategorie">
-              <h3>Quick view</h3>
-              <div
-                className={this.state.widgetType==="snapshots" ? "component choose" : "component no-choose"
-                + (this.state.widgetTypeAdded["snapshots"] ? " hidden" : " " ) }  draggable='true'
-                onDragStart={this.onDragStartWidget.bind(this,"snapshots")}
-                onDragEnd={this.onDragEndWidget}>Snapshots</div>
+              <h3>Group 1</h3>
+                {this.renderModule("component1.1","component1.1")}
+                {this.renderModule("component1.2","component1.2")}
             </div>
             <div className="item-moduleCategorie">
-              <h3>Producer Tools</h3>
-              <div
-                className={this.state.widgetType==="mostPopular" ? "component choose" : "component no-choose"
-                + (this.state.widgetTypeAdded["mostPopular"] ? " hidden" : " " )}  draggable='true'
-                onDragStart={this.onDragStartWidget.bind(this,"mostPopular")}
-                onDragEnd={this.onDragEndWidget}>
-              Most Popular</div>
-              <div
-                className={this.state.widgetType==="editorList" ? "component choose" : "component no-choose"
-                + (this.state.widgetTypeAdded["editorList"] ? " hidden" : " " ) }  draggable='true'
-                onDragStart={this.onDragStartWidget.bind(this,"editorList")}
-                onDragEnd={this.onDragEndWidget}
-              >Editor List</div>
+              <h3>Group 2</h3>
+                {this.renderModule("component2.1","component2.1")}
+                {this.renderModule("component2.2","component2.2")}
             </div>
             <div className="item-moduleCategorie">
-              <h3>Analytics</h3>
-              <div
-                className={this.state.widgetType==="googleAnalytics" ? "component choose" : "component no-choose"
-                + (this.state.widgetTypeAdded["googleAnalytics"] ? " hidden" : " " )}  draggable='true'
-                onDragStart={this.onDragStartWidget.bind(this,"googleAnalytics")}
-                onDragEnd={this.onDragEndWidget}
-              >Google analytics</div>
-              <div
-                className={this.state.widgetType==="chartbeat" ? "component choose" : "component no-choose"
-                + (this.state.widgetTypeAdded["chartbeat"] ? " hidden" : " " )}  draggable='true'
-                onDragStart={this.onDragStartWidget.bind(this,"chartbeat")}
-                onDragEnd={this.onDragEndWidget}
-              >Chartbeat</div>
-              <div
-                className={this.state.widgetType==="sharablee" ? "component choose" : "component no-choose"
-                + (this.state.widgetTypeAdded["sharablee"] ? " hidden" : " " )}  draggable='true'
-                onDragStart={this.onDragStartWidget.bind(this,"sharablee")}
-                onDragEnd={this.onDragEndWidget}
-              >sharablee</div>
-            </div>
-            <div className="item-moduleCategorie">
-              <h3>Weather</h3>
-              <div
-                className={this.state.widgetType==="weatherOverview" ? "component choose" : "component no-choose"
-                + (this.state.widgetTypeAdded["weatherOverview"] ? " hidden" : " " )}  draggable='true'
-                onDragStart={this.onDragStartWidget.bind(this,"weatherOverview")}
-                onDragEnd={this.onDragEndWidget}
-              >Weather Overview</div>
+              <h3>Group 3</h3>
+                {this.renderModule("component3.1","component3.1")}
+                {this.renderModule("component3.2","component3.2")}
+                {this.renderModule("component3.3","component3.3")}
             </div>
           </div>
           <div className="main-content main-content-hidden" style={{'left': '-999999px', 'position':'relative'}}>
