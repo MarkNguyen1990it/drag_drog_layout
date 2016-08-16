@@ -1,8 +1,10 @@
 var React = require('react');
 var _= require('lodash');
-var AddWidget = require('./addwidget');
+var AddWidget = require('./Addwidget/main');
 var DragDropContext = require('react-dnd').DragDropContext;
 var HTML5Backend = require('react-dnd-html5-backend');
+var DropBox = require('./DropBox/main');
+var FocusPoint= require('./FocusPoint/main');
 
 
 
@@ -139,6 +141,10 @@ var MainDnD = React.createClass({
       if (dragItem.indexRow === indexRow) {
         focusHighlights.indexRow = indexRow;
         focusHighlights.indexCol = indexCol;
+        if(indexRow===0 && dragItem.data.col != 12){
+          focusHighlights.list.push(-1);
+          focusHighlights.list.push(-1+".bottom");
+        }
         if (indexRow > 0 && dragItem.data.col != 12) {
             focusHighlights.list.push(indexRow - 1);
             focusHighlights.list.push((indexRow - 1)+".bottom");
@@ -174,6 +180,12 @@ var MainDnD = React.createClass({
         if(indexCol>0){
           focusHighlights.list.push(indexRow+"."+(indexCol-1)+".after");
         }
+
+        if(indexRow===0){
+          focusHighlights.list.push(-1);
+          focusHighlights.list.push(-1+".bottom");
+        }
+
       }
       return focusHighlights;
     },
@@ -264,15 +276,13 @@ var MainDnD = React.createClass({
       if(event){
         event.preventDefault();
       }
-
-
       var widgetConfig=this.state.widgetConfig;
       var dragItem=this.state.dragItem;
-      if(this.state.widgetType){
+      if(widgetType){
         var widgets=
           {
               "col": "12",
-              "widgetType": this.state.widgetType,
+              "widgetType": widgetType,
               "moduleItem": []
           }
         ;
@@ -405,9 +415,12 @@ var MainDnD = React.createClass({
         }else{
           focusHighlights.indexRow=indexRow;
           focusHighlights.indexCol=indexCol;
-          focusHighlights.list.push(indexRow);
+          focusHighlights.list.push(indexRow+".bottom");
           if(indexRow>0){
-            focusHighlights.list.push(indexRow-1);
+            focusHighlights.list.push((indexRow-1)+".bottom");
+          }
+          if(indexRow===0){
+            focusHighlights.list.push(-1+".bottom");
           }
           if(this.checkNumber(indexCol)){
             focusHighlights.list.push(indexRow+"."+indexCol+".before");
@@ -540,31 +553,26 @@ var MainDnD = React.createClass({
             </div>
           </div>
           {!(this.state.widgetConfig && this.state.widgetConfig.widgets && this.state.widgetConfig.widgets.length) &&
-            <div className={'main-content '+ (this.state.isOpen ? 'isOpenTool' : '')}
-              onDragOver={this.onDragOverWidget.bind(this,"addWidgets",null,null)}
-              onDragLeave={this.onDragLeaveWidget.bind(this,"addWidgets")}
-              onDrop={this.onDropEndWidget.bind(this,"snapshots",null,null,"","")}>
-                <div className={"box__input-addWidget" + (this.state.focusWidgets==="addWidgets" ? ' choose ' : ' no-choose ')} >
-                    <span> + ADD  WIDGET</span>
-                </div>
-            </div>
+            <DropBox isOpen={this.state.isOpen} onDropEndWidget={this.onDropEndWidget}></DropBox>
           }
           {(this.state.widgetConfig && this.state.widgetConfig.widgets && this.state.widgetConfig.widgets.length > 0) &&
             <div className={ 'main-content ' + (this.state.isOpen ? 'isOpenTool' : '')
              + (this.state.designSwitch ? ' switch-on' : '') }>
+               {
+                 <FocusPoint className="row point-bottom  " key={"-1.bottom_FocusPoint"}  indexRow={-1}
+                   action="bottom" focusHighlights={this.state.focusHighlights}
+                   onDropEndWidget={this.onDropEndWidget}>
+                 </FocusPoint>
+               }
               {
                 this.state.widgetConfig.widgets.map((row, indexRow) => {
                   return (
                     <div>
                       <div className="row" key={indexRow}>
                         { ( (row.length < limitRow)  || (this.state.checkSameLine && row.length <= limitRow) )&&
-                          <div className={"point-focus point-focus-begin"+ (this.state.focusWidgets===(indexRow+".0.before") ? ' choose ' : ' no-choose ')
-                              + (this.state.focusHighlights.list.indexOf(indexRow+"."+"0"+".before")>=0  ? ' highlight ' : '') }
-                              key={indexRow+"."+"0"+".before"}
-                              onDragLeave={this.onDragLeaveWidget.bind(this,indexRow+".0.before")}
-                              onDragOver={this.onDragOverWidget.bind(this,indexRow+".0.before",indexRow,0)}
-                              onDrop={this.onDropEndWidget.bind(this,"snapshots",indexRow,0,"before",indexRow+".0.before")}
-                          ></div>
+                          <FocusPoint className="point-focus point-focus-begin " key={indexRow+"."+"0"+".before_FocusPoint"}  indexRow={indexRow} indexCol={0} action="before"
+                            onDropEndWidget={this.onDropEndWidget} focusHighlights={this.state.focusHighlights}>
+                          </FocusPoint>
                         }
                         {(() => {
                           var colWidgets=row.length-1;
@@ -573,13 +581,9 @@ var MainDnD = React.createClass({
                             for (var col = 0; col < colWidgets; col++) {
                               var left= ((100/row.length)*(col+1))+"%";
                               rowWidgets.push(
-                                <div style={{'left': left}} className={"point-focus-end-col-"+col+" point-focus-end-col "+(this.state.focusWidgets===(indexRow+"."+col+".after") ? ' choose ' : ' no-choose ')
-                                    + (this.state.focusHighlights.list.indexOf(indexRow+"."+col+".after")>=0  ? ' highlight ' : '') }
-                                    key={indexRow+"."+col+".after"}
-                                    onDragLeave={this.onDragLeaveWidget.bind(this,indexRow+"."+col+".after")}
-                                    onDragOver={this.onDragOverWidget.bind(this,indexRow+"."+col+".after",indexRow,col)}
-                                    onDrop={this.onDropEndWidget.bind(this,"snapshots",indexRow,col,"after",indexRow+"."+col+".after")}></div>
-
+                                <FocusPoint className="point-focus-end-col " key={indexRow+"."+col+".after_FocusPoint"}  indexRow={indexRow} indexCol={col} action="after" left={left}
+                                  onDropEndWidget={this.onDropEndWidget} focusHighlights={this.state.focusHighlights}>
+                                </FocusPoint>
                               );
                             }
                           }
@@ -619,22 +623,16 @@ var MainDnD = React.createClass({
                           })
                         }
                         { ((row.length < limitRow) || (this.state.checkSameLine && row.length <= limitRow)) &&
-                          <div className={"point-focus point-focus-end"+(this.state.focusWidgets===(indexRow+"."+(row.length-1)+".after") ? ' choose ' : ' no-choose ')
-                              + (this.state.focusHighlights.list.indexOf(indexRow+"."+(row.length-1)+".after")>=0  ? ' highlight ' : '') }
-                              key={indexRow+"."+(row.length-1)+".after"}
-                              onDragLeave={this.onDragLeaveWidget.bind(this,indexRow+"."+(row.length-1)+".after")}
-                              onDragOver={this.onDragOverWidget.bind(this,indexRow+"."+(row.length-1)+".after",indexRow,(row.length-1))}
-                              onDrop={this.onDropEndWidget.bind(this,"snapshots",indexRow,(row.length-1),"after",indexRow+"."+(row.length-1)+".after")}></div>
+                            <FocusPoint className="point-focus point-focus-end  " key={indexRow+"."+row.length-1+".after_FocusPoint"}  indexRow={indexRow} indexCol={row.length-1} action="after"
+                              onDropEndWidget={this.onDropEndWidget} focusHighlights={this.state.focusHighlights}>
+                            </FocusPoint>
                         }
 
                       </div>
-                      <div className={"row point-bottom" + (this.state.focusWidgets===(indexRow+".bottom") ? ' choose ' : ' no-choose ')
-                        + (this.state.focusHighlights.list.indexOf(indexRow)>=0  ? ' highlight ' : '') }
-                        key={indexRow+"."+".bottom"}
-                        onDragLeave={this.onDragLeaveWidget.bind(this,indexRow+".bottom")}
-                        onDragOver={this.onDragOverWidget.bind(this,indexRow+".bottom",indexRow,null)}
-                        onDrop={this.onDropEndWidget.bind(this,"snapshots",indexRow,null,"",indexRow+".bottom")}>
-                      </div>
+                      <FocusPoint className="row point-bottom  " key={indexRow+"."+row.length-1+".bottom_FocusPoint"}  indexRow={indexRow}
+                        action="bottom"
+                        onDropEndWidget={this.onDropEndWidget} focusHighlights={this.state.focusHighlights}>
+                      </FocusPoint>
                     </div>
                   );
                 })

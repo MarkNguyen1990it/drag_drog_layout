@@ -32,3 +32,27 @@ body
   outline-offset: -4px;
 
 }
+
+.CSS-Cell {
+  background: #ccc;
+  width: 100px;
+  height: 100px;
+}
+
+.green {
+  background: green;
+  width: 100px;
+  height: 100px;
+}
+
+.yellow {
+  background: yellow;
+  width: 100px;
+  height: 100px;
+}
+
+.red {
+  background: red;
+  width: 100px;
+  height: 100px;
+}
