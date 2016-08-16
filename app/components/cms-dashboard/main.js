@@ -1,10 +1,11 @@
 var React = require('react');
 var _= require('lodash');
-var AddWidget = require('./Addwidget/main');
+var AddWidget = require('./AddWidget/main');
 var DragDropContext = require('react-dnd').DragDropContext;
 var HTML5Backend = require('react-dnd-html5-backend');
 var DropBox = require('./DropBox/main');
 var FocusPoint= require('./FocusPoint/main');
+var ContentWidget= require('./ContentWidget/main');
 
 
 
@@ -89,6 +90,7 @@ var MainDnD = React.createClass({
       e.preventDefault();
       this.setState( { isOpen: !this.state.isOpen ,designSwitch : false } );
     },
+
     isDesignSwitch: function(e) {
       e.preventDefault();
       var designSwitch=!this.state.designSwitch;
@@ -142,15 +144,12 @@ var MainDnD = React.createClass({
         focusHighlights.indexRow = indexRow;
         focusHighlights.indexCol = indexCol;
         if(indexRow===0 && dragItem.data.col != 12){
-          focusHighlights.list.push(-1);
           focusHighlights.list.push(-1+".bottom");
         }
         if (indexRow > 0 && dragItem.data.col != 12) {
-            focusHighlights.list.push(indexRow - 1);
             focusHighlights.list.push((indexRow - 1)+".bottom");
         }
         if (dragItem.data.col != 12) {
-            focusHighlights.list.push(indexRow);
             focusHighlights.list.push((indexRow)+".bottom");
         }
         if (dragItem.indexCol !== indexCol) {
@@ -166,11 +165,11 @@ var MainDnD = React.createClass({
         focusHighlights.indexRow=indexRow;
         focusHighlights.indexCol=indexCol;
         if(dragItem.data.col != 12 || (dragItem.indexRow < indexRow || this.checkDistanceRow(dragItem.indexRow, indexRow) > 1)){
-          focusHighlights.list.push(indexRow);
+
           focusHighlights.list.push(indexRow+".bottom");
         }
         if(indexRow>0 && (dragItem.data.col != 12 || (this.checkDistanceCol(dragItem.indexRow, indexRow-1) >= 1) )){
-          focusHighlights.list.push(indexRow-1);
+
           focusHighlights.list.push((indexRow-1)+".bottom");
         }
         if(this.checkNumber(indexCol)){
@@ -182,7 +181,6 @@ var MainDnD = React.createClass({
         }
 
         if(indexRow===0){
-          focusHighlights.list.push(-1);
           focusHighlights.list.push(-1+".bottom");
         }
 
@@ -202,27 +200,30 @@ var MainDnD = React.createClass({
     },
 
     // add Widget (ADD)
-    onDragChangeBeginWidget: function(indexRow,indexCol,event){
-      if(this.state.designSwitch){
-      event.dataTransfer.effectAllowed = 'move';
-
-
-
-      // setData() is necessary for starting the drag in firefox
-      event.dataTransfer.setData('text', 'dummy');
-
-      var div = document.getElementsByClassName("_"+indexRow+"_"+indexCol+"_div_")[0].cloneNode(true);
-      document.getElementsByClassName("main-content-hidden")[0].appendChild(div);
-      event.dataTransfer.setDragImage(div, 0, 0);
-
-
+    onDragChangeBeginWidget: function(indexRow,indexCol,widgetType,col,event){
+      // event.dataTransfer.effectAllowed = 'move';
+      // // setData() is necessary for starting the drag in firefox
+      // event.dataTransfer.setData('text', 'dummy');
+      //
       var widgetConfig=this.state.widgetConfig;
       var dragItem={};
       var data = widgetConfig.widgets[indexRow][indexCol];
+      // if(document.getElementsByClassName("main-content-hidden") && document.getElementsByClassName("_"+indexRow+"_"+indexCol+"_div_")){
+      //   if(widgetType==="gAStatisticsLineChart" || widgetType==="gAStatisticsBarChart" ){
+      //     var div = document.getElementById(widgetType+"_"+"hidden");
+      //     // div.className="col-md-"+col;
+      //     event.dataTransfer.setDragImage(div, 0, 0);
+      //   }else{
+      //     var div = document.getElementsByClassName("_"+indexRow+"_"+indexCol+"_div_")[0].cloneNode(true);
+      //      div.className="col-md-6";
+      //     document.getElementsByClassName("main-content-hidden")[0].appendChild(div);
+      //     event.dataTransfer.setDragImage(div, 0, 0);
+      //   }
+      // }
       dragItem["indexRow"]=indexRow;
       dragItem["indexCol"]=indexCol;
       dragItem["data"]=JSON.parse(JSON.stringify(data));
-
+      if(this.state.designSwitch){
         this.setState({widgetType:"",dragItem:dragItem,focusHighlights:JSON.parse(JSON.stringify(focusHighlightDefault))});
       }
     },
@@ -272,12 +273,14 @@ var MainDnD = React.createClass({
     },
 
     // drop end widget (ADD-CHANGE)
-    onDropEndWidget : function(widgetType,indexRow,indexCol,action,focusWidgets,event){
+    onDropEndWidget : function(widgetType,indexRow,indexCol,action,focusWidgets,dragItem,event){
       if(event){
         event.preventDefault();
       }
       var widgetConfig=this.state.widgetConfig;
-      var dragItem=this.state.dragItem;
+      if(!dragItem){
+        var dragItem=this.state.dragItem;
+      }
       if(widgetType){
         var widgets=
           {
@@ -405,7 +408,9 @@ var MainDnD = React.createClass({
     },
     // set Highlight draggable area
     onDragOverHighlights:function(indexRow,indexCol,event){
-      event.preventDefault();
+      if(event){
+        event.preventDefault();
+      }
       var focusHighlights=this.state.focusHighlights;
       var dragItem=this.state.dragItem;
       // Highlights (ADD)
@@ -527,6 +532,10 @@ var MainDnD = React.createClass({
       );
     },
 
+    showPopup:function(){
+
+    },
+
     render() {
       return (
         <div className="dashboard-page dashboard-new-layout">
@@ -567,8 +576,8 @@ var MainDnD = React.createClass({
               {
                 this.state.widgetConfig.widgets.map((row, indexRow) => {
                   return (
-                    <div>
-                      <div className="row" key={indexRow}>
+                    <div key={indexRow+"_div_row"}>
+                      <div className="row" key={indexRow+"_row"}>
                         { ( (row.length < limitRow)  || (this.state.checkSameLine && row.length <= limitRow) )&&
                           <FocusPoint className="point-focus point-focus-begin " key={indexRow+"."+"0"+".before_FocusPoint"}  indexRow={indexRow} indexCol={0} action="before"
                             onDropEndWidget={this.onDropEndWidget} focusHighlights={this.state.focusHighlights}>
@@ -592,33 +601,16 @@ var MainDnD = React.createClass({
                         {
                           row.map((widget, indexCol) => {
                             return (
-                                <div className={"col-md-"+widget.col + "  "+"_"+indexRow+"_"+indexCol+"_div_  "+
-                                   (this.state.dragItem && this.state.dragItem.indexRow === indexRow && this.state.dragItem.indexCol === indexCol ? " ondrag " : "")}
-                                  key={indexRow+"."+indexCol} draggable={this.state.designSwitch}
-                                  onDragOver={this.onDragOverHighlights.bind(this,indexRow,indexCol)}
-                                  onDragLeave={this.onDragLeaveHighlights.bind(this,indexRow,indexCol)}
-                                  onDragStart={this.onDragChangeBeginWidget.bind(this,indexRow,indexCol)}
-                                  onDragEnd={this.onDragEndWidget}>
-                                  <div className={"widget "}>
-                                    <a href="#" className="ic-remove" onClick={this.onRemoveWidget.bind(this,indexRow,indexCol)}><span>Remove widget</span></a>
-                                    <div className="widget-heading clearfix">
-                                        <div className={"widget-control "+
-                                              (this.state.designSwitch ? " hidden" : " " )
-                                              }>
-                                              <div className="icon-settings">
-                                                <span><i className="fa fa-cog" onClick={this.setContextMenu.bind(this,indexRow,indexCol)} ></i></span>
-                                                <ul className={ "cbp-tm-submenu"
-                                                  + ((!this.state.designSwitch && this.state.contextMenu.check && this.state.contextMenu.indexRow === indexRow && this.state.contextMenu.indexCol === indexCol) ? " visible " : " ") } >
-                                                  <li><a href="#" className="ic-delete" onClick={this.onRemoveWidget.bind(this,indexRow,indexCol)}>Delete widget <i className="fa fa-trash"></i></a></li>
-                                                </ul>
-                                              </div>
-                                        </div>
-                                        <h2 className="widget-title">{widget.widgetType}</h2>
-                                    </div>
-                                    <div className="widget-content">
-                                    </div>
-                                  </div>
-                                </div>
+                                <ContentWidget widget={widget} indexRow={indexRow} indexCol={indexCol} key={indexRow+"."+indexCol+".ct"}
+                                  onDragOverHighlights={this.onDragOverHighlights}
+                                  onDragLeaveHighlights={this.onDragLeaveHighlights}
+                                  onDragChangeBeginWidget={this.onDragChangeBeginWidget}
+                                  onDragEndWidget={this.onDragEndWidget}
+                                  onRemoveWidget={this.onRemoveWidget}
+                                  contextMenu={this.state.contextMenu}
+                                  setContextMenu={this.setContextMenu}
+                                  showPopup={this.showPopup}>
+                                </ContentWidget>
                             );
                           })
                         }

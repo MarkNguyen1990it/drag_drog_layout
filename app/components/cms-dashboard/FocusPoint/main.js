@@ -46,11 +46,20 @@ var FocusPointTarget = {
             // target already handled drop
             return;
         }
-        console.log(props);
         // Obtain the dragged item
         var item = monitor.getItem();
+
+
         if (item && item.type) {
-            props.onDropEndWidget(item.type, props.indexRow, props.indexCol, props.action, props.indexRow + "." + props.indexCol + "." + props.action, null)
+            props.onDropEndWidget(item.type, props.indexRow, props.indexCol, props.action, props.indexRow + "." + props.indexCol + "." + props.action,null, null)
+        }else if(item && item.data){
+            var dragItem={data:item.data,indexRow:item.indexRow,indexCol:item.indexCol};
+            if(props.indexCol !=null && props.indexCol!=undefined){
+              props.onDropEndWidget("", props.indexRow, props.indexCol, props.action, props.indexRow + "." + props.indexCol + "." + props.action,dragItem, null);
+            }else{
+              props.onDropEndWidget("", props.indexRow, props.indexCol, props.action, props.indexRow + "." + props.action,dragItem, null);
+            }
+
         }
         // You can do something with it
         // ChessActions.movePiece(item.fromPosition, props.position);
@@ -123,7 +132,7 @@ var FocusPoint = React.createClass({
                 ? ' choose '
                 : ' no-choose ') + (this.props.focusHighlights.list.indexOf(key) >= 0
                 ? ' highlight '
-                : '')} key={key}></div>
+                : '')}></div>
         );
     }
 });

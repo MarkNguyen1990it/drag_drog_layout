@@ -50,14 +50,8 @@ var dropBoxTarget = {
     // Obtain the dragged item
     var item = monitor.getItem();
     if(item && item.type){
-      props.onDropEndWidget(item.type,"snapshots",null,null,"","",null)
+      props.onDropEndWidget(item.type,"snapshots",null,null,"","",null,null)
     }
-    // You can do something with it
-    // ChessActions.movePiece(item.fromPosition, props.position);
-
-    // You can also do nothing and return a drop result,
-    // which will be available as monitor.getDropResult()
-    // in the drag source's endDrag() method
     return { moved: true };
   }
 };
@@ -104,11 +98,6 @@ var DropBox = React.createClass({
     var canDrop = this.props.canDrop;
     var connectDropTarget = this.props.connectDropTarget;
 
-    // <div className='Cell CSS-Cell'>
-    //   {isOver && canDrop && <div className='green' />}
-    //   {!isOver && canDrop && <div className='yellow' />}
-    //   {isOver && !canDrop && <div className='red' />}
-    // </div>
 
     return connectDropTarget(
       <div className={'main-content '+ (this.props.isOpen ? 'isOpenTool' : '')}>
