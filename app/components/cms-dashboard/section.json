@@ -1,0 +1,14 @@
+[
+  {
+    "ModuleName": "component 1",
+    "ModuleType": "component1"
+  },
+  {
+    "ModuleName": "component 2",
+    "ModuleType": "component2"
+  },
+  {
+    "ModuleName": "component 3",
+    "ModuleType": "component3"
+  }
+]

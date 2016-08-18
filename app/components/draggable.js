@@ -1,7 +1,48 @@
 var React = require('react');
 var Container = require('./cms-dashboard/main');
+var Module = require('./loadmultiple');
+var component1=require('./cms-dashboard/component1/main');
+var FileInput = require('react-file-input');
+var $ = require('jquery');
 var MyDraggable = React.createClass({
+handleSave: function(event) {
+    console.log('Selected file:', $("#myfile")[0].files);
+                var formData = new FormData();
+                formData.append('section', 'general');
+                formData.append('action', 'previewImg');
+                // Main magic with files here
+                formData.append('myfile', $("#myfile")[0].files[0]);
+                $.ajax({
+                    type: "POST",
+                    url: '/upload',
+                    data: formData,
+                    dataType: 'json',
+                    contentType: false,
+                    processData: false,
+                    success: function (response) {
+                        alert('success!!');
+                    },
+                    error: function (error) {
+                        alert("errror");
+                    }
+                });
+
+  },
   render: function() {
+  var listConponent=[
+                      {
+                        "ModuleName": "component 1",
+                        "ModuleType": "component1"
+                      },
+                      {
+                        "ModuleName": "component 2",
+                        "ModuleType": "component2"
+                      },
+                      {
+                        "ModuleName": "component 3",
+                        "ModuleType": "component3"
+                      }
+                    ];
     return (
 
         <div className="wp layout is-section-false focus-content has-no-sidebar">
@@ -9,6 +50,12 @@ var MyDraggable = React.createClass({
           <div className="container-fluid">
             <div id="primary" className="page-content-wrapper">
               <Container key="Container" />
+
+              <input type="file" name="myfile" id="myfile" />
+              <button onClick={this.handleSave}>Save</button>
+              {listConponent.map(function(object, i){
+                      return <Module type={object.ModuleType} key={i} />;
+                  })}
             </div>
             <div id="secondary" className="page-sidebar-wrapper" data-reactid=".0.1.2">
             	<ul className="sidebar wpcom-sidebar main-sidebar" data-reactid=".0.1.2.0">
